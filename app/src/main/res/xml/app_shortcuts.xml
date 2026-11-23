@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 添加小部件 - 3×3 标准尺寸（默认推荐） -->
+    <shortcut
+        android:shortcutId="add_widget_3x3"
+        android:shortcutShortLabel="@string/shortcut_add_widget_short"
+        android:shortcutLongLabel="@string/shortcut_add_widget_long"
+        android:shortcutDisabledMessage="@string/shortcut_add_widget_disabled"
+        android:icon="@drawable/ic_shortcut_widget">
+        <intent
+            android:action="com.shanqiu.pickupmanager.action.ADD_WIDGET"
+            android:targetPackage="com.shanqiu.pickupmanager"
+            android:targetClass="com.shanqiu.pickupmanager.widget.ShortcutTrampolineActivity">
+            <extra android:name="widget_size" android:value="3x3" />
+        </intent>
+    </shortcut>
+
+    <!-- 添加小部件 - 3×4 紧凑尺寸 -->
+    <shortcut
+        android:shortcutId="add_widget_3x4"
+        android:shortcutShortLabel="@string/shortcut_add_widget_3x4_short"
+        android:shortcutLongLabel="@string/shortcut_add_widget_3x4_long"
+        android:shortcutDisabledMessage="@string/shortcut_add_widget_disabled"
+        android:icon="@drawable/ic_shortcut_widget">
+        <intent
+            android:action="com.shanqiu.pickupmanager.action.ADD_WIDGET"
+            android:targetPackage="com.shanqiu.pickupmanager"
+            android:targetClass="com.shanqiu.pickupmanager.widget.ShortcutTrampolineActivity">
+            <extra android:name="widget_size" android:value="3x4" />
+        </intent>
+    </shortcut>
+
+    <!-- 添加小部件 - 4×3 宽屏尺寸 -->
+    <shortcut
+        android:shortcutId="add_widget_4x3"
+        android:shortcutShortLabel="@string/shortcut_add_widget_4x3_short"
+        android:shortcutLongLabel="@string/shortcut_add_widget_4x3_long"
+        android:shortcutDisabledMessage="@string/shortcut_add_widget_disabled"
+        android:icon="@drawable/ic_shortcut_widget">
+        <intent
+            android:action="com.shanqiu.pickupmanager.action.ADD_WIDGET"
+            android:targetPackage="com.shanqiu.pickupmanager"
+            android:targetClass="com.shanqiu.pickupmanager.widget.ShortcutTrampolineActivity">
+            <extra android:name="widget_size" android:value="4x3" />
+        </intent>
+    </shortcut>
+
+    <!-- 添加小部件 - 4×4 中等尺寸 -->
+    <shortcut
+        android:shortcutId="add_widget_4x4"
+        android:shortcutShortLabel="@string/shortcut_add_widget_4x4_short"
+        android:shortcutLongLabel="@string/shortcut_add_widget_4x4_long"
+        android:shortcutDisabledMessage="@string/shortcut_add_widget_disabled"
+        android:icon="@drawable/ic_shortcut_widget">
+        <intent
+            android:action="com.shanqiu.pickupmanager.action.ADD_WIDGET"
+            android:targetPackage="com.shanqiu.pickupmanager"
+            android:targetClass="com.shanqiu.pickupmanager.widget.ShortcutTrampolineActivity">
+            <extra android:name="widget_size" android:value="4x4" />
+        </intent>
+    </shortcut>
+
+    <!-- 添加小部件 - 5×4 大屏尺寸 -->
+    <shortcut
+        android:shortcutId="add_widget_5x4"
+        android:shortcutShortLabel="@string/shortcut_add_widget_5x4_short"
+        android:shortcutLongLabel="@string/shortcut_add_widget_5x4_long"
+        android:shortcutDisabledMessage="@string/shortcut_add_widget_disabled"
+        android:icon="@drawable/ic_shortcut_widget">
+        <intent
+            android:action="com.shanqiu.pickupmanager.action.ADD_WIDGET"
+            android:targetPackage="com.shanqiu.pickupmanager"
+            android:targetClass="com.shanqiu.pickupmanager.widget.ShortcutTrampolineActivity">
+            <extra android:name="widget_size" android:value="5x4" />
+        </intent>
+    </shortcut>
+
+    <!-- 添加小部件 - 5×3 超宽尺寸 -->
+    <shortcut
+        android:shortcutId="add_widget_5x3"
+        android:shortcutShortLabel="@string/shortcut_add_widget_5x3_short"
+        android:shortcutLongLabel="@string/shortcut_add_widget_5x3_long"
+        android:shortcutDisabledMessage="@string/shortcut_add_widget_disabled"
+        android:icon="@drawable/ic_shortcut_widget">
+        <intent
+            android:action="com.shanqiu.pickupmanager.action.ADD_WIDGET"
+            android:targetPackage="com.shanqiu.pickupmanager"
+            android:targetClass="com.shanqiu.pickupmanager.widget.ShortcutTrampolineActivity">
+            <extra android:name="widget_size" android:value="5x3" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

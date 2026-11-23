@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">码上取</string>
+    
+    
+    
+    
+    
+    
+    
+    
+    <string name="import_success">成功导入%d条新取件信息</string>
+    <string name="import_no_new">扫描完成，未发现新的取件信息</string>
+    <!-- R5 / M-04②：缺 READ_SMS 时不能复用上面那条「未发现新的取件信息」——
+         那句话把「读不到」说成了「没有」，用户会反复点导入却永远修不好。 -->
+    <string name="import_need_sms_permission">尚未授予短信读取权限，无法扫描收件箱。请先完成「短信权限」设置后再试。</string>
+    
+    
+    
+    <!-- 小部件描述（6 种尺寸） -->
+    <string name="widget_description">码上取 - 桌面取件码管理小部件，实时显示待取件信息</string>
+    <string name="widget_description_3x3">码上取 · 3×3 标准</string>
+    <string name="widget_description_3x4">码上取 · 3×4 紧凑</string>
+    <string name="widget_description_4x3">码上取 · 4×3 宽屏</string>
+    <string name="widget_description_4x4">码上取 · 4×4 中等</string>
+    <string name="widget_description_5x4">码上取 · 5×4 大屏</string>
+    <string name="widget_description_5x3">码上取 · 5×3 超宽</string>
+    <string name="widget_description_2x2">码上取 · 2×2 超小</string>
+
+    <!-- 应用快捷方式 - 长按图标弹出菜单 -->
+    <string name="shortcut_add_widget_short">添加小部件</string>
+    <string name="shortcut_add_widget_long">添加码上取小部件到桌面</string>
+    <string name="shortcut_add_widget_disabled">小部件功能不可用</string>
+    <string name="shortcut_add_widget_3x4_short">3×4 紧凑</string>
+    <string name="shortcut_add_widget_3x4_long">添加3×4紧凑小部件</string>
+    <string name="shortcut_add_widget_4x3_short">4×3 宽屏</string>
+    <string name="shortcut_add_widget_4x3_long">添加4×3宽屏小部件</string>
+    <string name="shortcut_add_widget_4x4_short">4×4 中等</string>
+    <string name="shortcut_add_widget_4x4_long">添加4×4中等小部件</string>
+    <string name="shortcut_add_widget_5x4_short">5×4 大屏</string>
+    <string name="shortcut_add_widget_5x4_long">添加5×4大屏小部件</string>
+    <string name="shortcut_add_widget_5x3_short">5×3 超宽</string>
+    <string name="shortcut_add_widget_5x3_long">添加5×3超宽小部件</string>
+</resources>

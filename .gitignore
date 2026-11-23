@@ -1,0 +1,111 @@
+# ---- 构建产物 ----
+*.iml
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+local.properties
+
+# 成品包与反混淆映射：APK 里含全部字符串资源，mapping.txt 里含全部类名与方法名，
+# 两者都不该进版本库（要发布请走 Release 产物，不要 commit）。
+*.apk
+*.aab
+app/debug/
+app/release/
+mapping.txt
+**/mapping/
+**/baselineProfiles/
+
+# ---- IDE ----
+.idea/
+.DS_Store
+
+# ---- 签名密钥：绝对不可提交 ----
+*.jks
+*.keystore
+*.p12
+*.pem
+keystore.properties
+
+# ---- 模型权重与训练产物（体积大且含隐私衍生数据）----
+*.pt
+*.onnx
+*.onnx.data
+model_output/
+model_output_enhanced/
+__pycache__/
+*.pyc
+
+# ---- 真实短信语料与调试产物，一律不得入库 ----
+sms_export*
+sms_cleaned*
+sms_excluded*
+sms_removed*
+sms_3162*
+sms_inbox.txt
+sms_raw.txt
+样本*.json
+evaluation_results.json
+db_dump.bin
+courier_names.json
+logcat*
+*_log.txt
+app_log*
+log_raw.txt
+log_utf8.txt
+build.log
+build_*.txt
+gradle_deps.txt
+manifest_dump.txt
+
+# ---- 调试截图 ----
+/s.png /s2.png /s3.png /s4.png
+/sa.png /sb.png /sc.png
+/screen*.png
+/widget_*.png
+/before_kill.png
+/after_kill.png
+
+# ---- 兜底：**任意目录**下的数据类文件一律不入库 ----
+# 上面那批按文件名写的规则是"点名式"黑名单，换一个文件名的短信导出照样能被 add，
+# 对本应用来说那就是最严重的泄露路径。
+#
+# 注意这些模式**不带前导斜杠**，因此对仓库里任意层级都生效。
+# 历史教训：本文件曾经写成 `/*.json`、`/*.txt`（带前导斜杠），git 只把它们和仓库根
+# 比对 —— 于是把一份短信导出丢进 docs/、app/src/main/assets/、tools/ 这类子目录，
+# 一次 `git add -A` 就能随 APK 一起公开。那恰好就是这套规则本来要堵的场景。
+# 修改本段后请用 README 第 9 节的 `git check-ignore` 回归表验一遍。
+*.json
+*.jsonl
+*.txt
+*.csv
+*.tsv
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.html
+*.har
+*.log
+*.bak
+*.orig
+
+# 白名单：Room 的 schema 导出是**必须跟踪**的构建契约（会被上面的 *.json 挡掉）
+!app/schemas/**/*.json
+# 白名单：脱敏映射的**格式样例**（内容全是哨兵值，零真实数据）。
+# 少了这一条，`redact_history.py` 的报错就指向一个仓库里根本不存在的文件（R7 / L-24）。
+# 真实映射仍写在同目录的 `redact_map.local.txt`，那一条继续被上面的 `*.txt` 挡着。
+!tools/audit/redact_map.example.txt
+
+# 密钥与凭据：任意层级的 .env / secrets 都不入库
+env
+.env
+.env.*
+secrets/
+secrets.env
+*_secret*
+*_token*
+*credential*

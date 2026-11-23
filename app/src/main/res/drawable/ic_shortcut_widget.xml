@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 蓝色圆角矩形背景 -->
+    <path
+        android:fillColor="#1976D2"
+        android:pathData="M24,0 L84,0 C97.25,0 108,10.75 108,24 L108,84 C108,97.25 97.25,108 84,108 L24,108 C10.75,108 0,97.25 0,84 L0,24 C0,10.75 10.75,0 24,0 Z" />
+
+    <!-- 白色包裹图标 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,26 L30,40v36l24,12l24,-12V40L54,26zM54,31.3L70.7,40L54,48.7L37.3,40L54,31.3zM36,43.2l15,6v27.4l-15,-6V43.2zM57,76.6V49.2l15,-6v27.4L57,76.6z" />
+</vector>

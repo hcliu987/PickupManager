@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  通知栏 small icon：Android 5.0+ 只取 alpha 通道并统一染白，
+  所以这里必须是「纯白不透明形状 + 透明背景」的 vector，不能带 tint / 背景板。
+  与 ic_package_white.xml 不同：那个带 android:tint，供小部件 RemoteViews 使用。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2L4,7v10l8,5l8,-5V7L12,2zM12,4.23L17.66,8L12,11.77L6.34,8L12,4.23zM6,9.53l5,2.75v6.94l-5,-2.75V9.53zM13,19.22v-6.94l5,-2.75v6.94L13,19.22z" />
+</vector>

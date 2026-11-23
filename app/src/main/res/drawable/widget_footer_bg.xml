@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 底部操作栏 - 深色磨砂玻璃 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 底层 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="180"
+                android:startColor="#15FFFFFF"
+                android:endColor="#08FFFFFF"
+                android:type="linear" />
+            <corners
+                android:bottomLeftRadius="20dp"
+                android:bottomRightRadius="20dp" />
+        </shape>
+    </item>
+
+    <!-- 顶部细分割线（高光） -->
+    <item android:gravity="top" android:height="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#25FFFFFF" />
+        </shape>
+    </item>
+
+</layer-list>

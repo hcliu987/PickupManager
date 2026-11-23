@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  码上取 PickupManager —— 完全离线的安卓快递取件助手
+  Copyright (C) 2026 shanqiugzs
+  SPDX-License-Identifier: GPL-3.0-or-later
+  许可全文见仓库根目录 LICENSE。
+
+  这份清单只在 debug 变体参与合并，release 包里既没有这个 Activity，
+  也没有对应的第二个桌面图标。见 SimulatedSmsActivity 的类注释。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name=".debug.SimulatedSmsActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="码上取·模拟短信"
+            android:theme="@style/Theme.PickupManager">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

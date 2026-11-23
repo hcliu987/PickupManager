@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg_gradient"
+    android:orientation="vertical"
+    android:padding="0dp"
+    android:stateListAnimator="@null">
+
+    <!-- 顶部状态栏 - 呼吸光晕渐变 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/widget_header_gradient"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="11dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_package_white"
+            android:tint="#FFFFFF" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.05"
+            android:text="码上取"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+
+        <!-- 待取件数量徽章 - 玻璃胶囊 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:background="@drawable/widget_count_badge_bg"
+            android:gravity="center"
+            android:paddingHorizontal="9dp">
+
+            <TextView
+                android:id="@+id/widget_pending_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:includeFontPadding="false"
+                android:minWidth="14dp"
+                android:text="0"
+                android:gravity="center"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 列表容器 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- 可滑动的ListView -->
+        <ListView
+            android:id="@+id/widget_pickup_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:listSelector="@android:color/transparent"
+            android:overScrollMode="never"
+            android:overScrollHeader="@android:color/transparent"
+            android:overScrollFooter="@android:color/transparent"
+            android:paddingHorizontal="10dp"
+            android:scrollbars="vertical"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="0dp" />
+
+        <!-- 空状态 -->
+        <LinearLayout
+            android:id="@+id/widget_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:src="@drawable/ic_empty_box"
+                android:tint="#60FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="sans-serif-light"
+                android:includeFontPadding="false"
+                android:text="暂无待取件"
+                android:textColor="#80FFFFFF"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- 底部操作栏 - 玻璃质感 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/widget_footer_bg"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="9dp">
+
+        <!-- 打开应用按钮（玻璃质感 - 次要）- 左侧 -->
+        <TextView
+            android:id="@+id/widget_btn_open"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_btn_secondary_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:stateListAnimator="@null"
+            android:text="打开应用"
+            android:textColor="#E3F2FD"
+            android:textSize="13sp" />
+
+        <!-- 刷新列表按钮（蓝色光晕胶囊 - 主操作）- 右侧 -->
+        <TextView
+            android:id="@+id/widget_btn_refresh"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_btn_primary_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:stateListAnimator="@null"
+            android:text="刷新列表"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+</LinearLayout>

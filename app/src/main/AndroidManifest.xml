@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- R5 / M-13：删除 `USE_EXACT_ALARM`（Google Play 受限权限，仅闹钟/日历类可声明）。
+         本应用唯一用到精确闹钟的是 BackgroundProcessManager.scheduleExitAlarm() ——
+         一个"后台超时退出"兜底计时器，精度完全不敏感，且它自己已写了降级：
+         canScheduleExactAlarms() 为假时改用 setAndAllowWhileIdle()（非精确）。
+         删除后：Android 12/13 行为不变（SCHEDULE_EXACT_ALARM 默认授予）；
+         Android 14+ 走降级分支，退出计时可能晚几分钟 —— 无用户可见影响。 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14: 前台服务需要指定类型 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- R5 / M-12：补上 REQUEST_IGNORE_BATTERY_OPTIMIZATIONS。
+         代码有 3 处用 Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 拉起系统弹窗
+         （BatteryOptimizationHelper / PermissionActionHelper / PermissionChecker），
+         但清单从未声明该权限 —— 部分 ROM 上弹窗不出现或开关点不动。
+         ⚠️ 它同样是 Play 受限权限，上架需提交用途说明且不保证通过；
+         若走 F-Droid / 直接分发 APK 则不受限。 -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- R5 / L-08：删除 WAKE_LOCK。原注释称"Widget goAsync 需要 WakeLock"，
+         但全仓 0 处 newWakeLock / PowerManager.WakeLock 引用，声明从未被使用；
+         goAsync 的保活由 PendingResult 提供，与 WakeLock 无关。
+         ⚠️ 删的只是这张手写清单：`androidx.work:work-runtime:2.9.0` 自己的清单里有它，
+         合并后成品 APK 仍然申请 WAKE_LOCK（aapt dump permissions 可见）。
+         要真正剥掉需 tools:node="remove" + 真机验证，见 docs/KNOWN_ISSUES.md 问题 31。 -->
+
+    <application
+        android:name=".PickupApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PickupManager"
+        tools:targetApi="31">
+
+        <!-- vivo OriginOS 原子组件标识（官方文档要求） -->
+        <meta-data
+            android:name="vivoWidgetVersion"
+            android:value="1" />
+
+        <!-- 多品牌小部件通用标识 -->
+        <meta-data
+            android:name="widget_provider"
+            android:value="true" />
+
+        <activity
+            android:name=".ui.ComposeMainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.PickupManager">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- 长按应用图标快捷菜单 - 6种小部件尺寸 -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/app_shortcuts" />
+            <!-- 性能优化：声明支持高刷新率 -->
+            <meta-data
+                android:name="android.window.PROPERTY_SUPPORTS_HIGH_REFRESH_RATE"
+                android:value="true" />
+        </activity>
+
+        <!-- 快捷方式跳板 Activity - 处理"添加小部件"快捷菜单项 -->
+        <activity
+            android:name=".widget.ShortcutTrampolineActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true" />
+
+        <receiver
+            android:name=".receiver.SmsReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".receiver.AppExitReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.shanqiu.pickupmanager.EXIT_APP" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 跨进程数据变化通知 ContentProvider。
+             R5 / L-09：原注释写"（主进程实例化）"是错的 —— `android:process=":main"`
+             是**一个名为 ":main" 的私有进程**，不等于默认主进程（默认进程名=包名）。
+             保留 :main 不动（改它等于改数据同步的进程拓扑，需真机验证），只修注释。 -->
+        <provider
+            android:name=".data.DataChangeContentProvider"
+            android:authorities="com.shanqiu.pickupmanager.datachange"
+            android:exported="false"
+            android:process=":main" />
+
+        <!-- 桌面小部件按钮前台服务
+             PendingIntent.getForegroundService() 由桌面进程直接调用
+             必须 exported="true" 允许桌面进程启动 -->
+        <service
+            android:name=".widget.WidgetActionService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- 取件码桌面小部件 - 3×3 默认尺寸 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <!-- R4（M-23）：原有 REFRESH / SILENT_REFRESH 两个 action，全仓无发送方，已删除。
+                     保留的 MARK_PICKED 由 PendingIntent.getBroadcast() 显式投递。 -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info" />
+            <!-- MIUI/HyperOS 小部件标识（官方要求） -->
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- 曝光刷新：用户滑动到桌面时自动刷新 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- 曝光刷新最短间隔：10秒（官方要求最短10秒） -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <!-- vivo OriginOS 原子组件标识（官方文档要求） -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+            <!-- vivo 原子组件详情描述 -->
+            <meta-data
+                android:name="vivo.widget.description"
+                android:resource="@string/widget_description" />
+        </receiver>
+
+        <!-- 取件码桌面小部件 - 3×4 高瘦 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider3x4"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info_3x4" />
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+        </receiver>
+
+        <!-- 取件码桌面小部件 - 2×2 超小 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider2x2"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info_2x2" />
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+        </receiver>
+
+        <!-- 取件码桌面小部件 - 4×3 矮宽 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider4x3"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info_4x3" />
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+        </receiver>
+
+        <!-- 取件码桌面小部件 - 4×4 中等方 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider4x4"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info_4x4" />
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+        </receiver>
+
+        <!-- 取件码桌面小部件 - 5×4 宽高 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider5x4"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info_5x4" />
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+        </receiver>
+
+        <!-- 取件码桌面小部件 - 5×3 超宽 -->
+        <receiver
+            android:name=".widget.PickupWidgetProvider5x3"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":widgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- MIUI action removed: breaks standard widget picker -->
+                <action android:name="com.shanqiu.pickupmanager.widget.MARK_PICKED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/pickup_widget_info_5x3" />
+            <!-- MIUI 小部件标签已移除：带 miuiWidget 的 widget 会被 HyperOS 从"安卓小部件"列表中隐藏 -->
+            <!-- miuiWidgetRefresh 已移除 -->
+            <!-- miuiWidgetRefreshMinInterval 已移除 -->
+            <meta-data android:name="vivo_widget" android:value="true" />
+        </receiver>
+
+        <!-- 取件码小部件数据服务 - 支持可滑动列表 -->
+        <!-- 修复：移除独立进程，避免 IPC 延迟导致的数据不同步 -->
+        <service
+            android:name=".widget.PickupWidgetService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <!-- 通知监听服务 - SMS权限失效时的备用方案 -->
+        <service
+            android:name=".sms.PickupNotificationListener"
+            android:enabled="true"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+
+</manifest>

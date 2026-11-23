@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="0dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="0dp"
+    android:background="@drawable/widget_card_bg"
+    android:duplicateParentState="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="12dp"
+    android:paddingTop="7dp"
+    android:paddingBottom="7dp"
+    android:stateListAnimator="@null">
+    <!-- 左侧信息区 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- 取件码 - 白色发光字体 -->
+        <TextView
+            android:id="@+id/item_pickup_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:includeFontPadding="false"
+            android:shadowColor="#553B82F6"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="6"
+            android:text=""
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- 地址 - 浅蓝白 -->
+        <TextView
+            android:id="@+id/item_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-light"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#A8C5E0"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- 右侧已取按钮 - 青绿玻璃胶囊 -->
+    <TextView
+        android:id="@+id/item_pickup_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:layout_marginStart="10dp"
+        android:background="@drawable/widget_btn_pickup_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:minWidth="48dp"
+        android:paddingHorizontal="14dp"
+        android:stateListAnimator="@null"
+        android:text="已取"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+</LinearLayout>

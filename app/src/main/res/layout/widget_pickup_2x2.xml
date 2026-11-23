@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg_gradient"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="10dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="6dp"
+    android:stateListAnimator="@null">
+
+    <!-- 顶部：logo + 应用名称，一行水平排列 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_package_white"
+            android:tint="#FFFFFF"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:text="码上取"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <!-- 中间：待取件数量大数字 + 标签 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/widget_pending_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:gravity="center"
+            android:text="0"
+            android:textColor="#FFFFFF"
+            android:textSize="34sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:fontFamily="sans-serif"
+            android:includeFontPadding="false"
+            android:text="待取件"
+            android:textColor="#B0C4E8"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- 底部：查看全部按钮 -->
+    <TextView
+        android:id="@+id/widget_btn_open"
+        android:layout_width="match_parent"
+        android:layout_height="26dp"
+        android:background="@drawable/widget_btn_primary_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:stateListAnimator="@null"
+        android:text="查看全部"
+        android:textColor="#FFFFFF"
+        android:textSize="11sp" />
+
+</LinearLayout>
