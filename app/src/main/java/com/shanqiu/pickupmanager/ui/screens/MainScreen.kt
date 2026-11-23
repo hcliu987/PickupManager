@@ -43,7 +43,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -72,6 +74,7 @@ fun MainScreen(
     val context = LocalContext.current
     val application = context.applicationContext as android.app.Application
     val view = LocalView.current
+    val copyScope = rememberCoroutineScope()
     
     val viewModel: ComposePickupViewModel = viewModel(
         factory = ComposeViewModelFactory(application)
@@ -233,11 +236,15 @@ fun MainScreen(
                     item = selectedItem!!,
                     onDismiss = { viewModel.hideDetailDialog() },
                     onCopyClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("取件信息", selectedItem!!.rawSms)
-                        clipboard.setPrimaryClip(clip)
-                        viewModel.copyPickupCode(selectedItem!!)
-                        viewModel.hideDetailDialog()
+                        val itemToCopy = selectedItem ?: return@PickupDetailDialog
+                        copyScope.launch {
+                            // 列表投影的 rawSms 为空时按 id 兜底查完整原文，避免复制到空文本
+                            val raw = viewModel.resolveRawSmsForCopy(itemToCopy)
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("取件信息", raw))
+                            viewModel.copyPickupCode(itemToCopy)
+                            viewModel.hideDetailDialog()
+                        }
                     },
                     onAddressSave = { newAddress ->
                         viewModel.updateItemAddress(selectedItem!!.id, newAddress)
@@ -265,7 +272,9 @@ fun MainScreen(
                     viewModel.setDefaultDisplayDays(days)
                     showSettingsDialog = false
                 },
-                onClearAll = { viewModel.clearAllData() }
+                onClearAll = { viewModel.clearAllData() },
+                onCountCleanable = { viewModel.countCleanableItems() },
+                onCleanOld = { viewModel.cleanOldItems() }
             )
         }
         

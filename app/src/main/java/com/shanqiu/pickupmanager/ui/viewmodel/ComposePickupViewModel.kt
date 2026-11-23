@@ -234,6 +234,17 @@ class ComposePickupViewModel(
             }
         }
     }
+
+    /**
+     * 复制「取件信息」用的短信原文。
+     *
+     * 列表投影把 rawSms 置空，弹窗先显示列表项、再异步补全原文。如果用户点得极快，
+     * rawSms 可能还没补上；这里在返回前按 id 兜底查一次库，保证复制的永远不是空文本。
+     */
+    suspend fun resolveRawSmsForCopy(item: PickupItem): String {
+        if (item.rawSms.isNotBlank()) return item.rawSms
+        return repository.getItemById(item.id)?.rawSms.orEmpty()
+    }
     
     fun hideDetailDialog() {
         _showDetailDialog.value = false
@@ -332,6 +343,33 @@ class ComposePickupViewModel(
                 refreshData()
             } catch (e: Throwable) {
                 Log.e(TAG, "clearAllData 异常: ${e.message}", e)
+            }
+        }
+    }
+
+    /**
+     * 统计入库满 7 天的记录数（含待取），供设置页确认弹窗显示「将删除 N 条」。
+     */
+    suspend fun countCleanableItems(): Int {
+        val before = System.currentTimeMillis() - (PickupRepository.RETENTION_DAYS * 24L * 60 * 60 * 1000)
+        return repository.countItemsOlderThan(before)
+    }
+
+    /**
+     * 手动清理 7 天前的记录：删除后刷新列表、通知与桌面组件。
+     * 与 WorkManager 每天兜底共用同一条 DAO SQL，口径一致。
+     */
+    fun cleanOldItems() {
+        viewModelScope.launch(coroutineExceptionHandler) {
+            try {
+                val before = System.currentTimeMillis() - (PickupRepository.RETENTION_DAYS * 24L * 60 * 60 * 1000)
+                repository.deleteItemsOlderThan(before)
+                hideDetailDialog()
+                refreshData()
+                PickupSummaryNotifier.refresh(getApplication<Application>())
+                com.shanqiu.pickupmanager.widget.WidgetSyncHelper.notifyWidgetDataChanged(getApplication())
+            } catch (e: Throwable) {
+                Log.e(TAG, "cleanOldItems 异常: ${e.message}", e)
             }
         }
     }

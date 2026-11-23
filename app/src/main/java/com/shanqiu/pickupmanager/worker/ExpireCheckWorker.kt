@@ -16,6 +16,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.shanqiu.pickupmanager.data.db.PickupDatabase
 import com.shanqiu.pickupmanager.data.model.PickupItem
+import com.shanqiu.pickupmanager.data.repository.PickupRepository
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -67,8 +68,16 @@ class ExpireCheckWorker(
             // 一旦改写，记录会从两个页签同时消失且再也回不来。
             // 过期状态由展示层用 PickupItem.isExpired() 渲染成「已过期」标签，
             // 超过显示天数的记录由 ViewModel 的时间窗过滤负责隐藏。
-            val thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+            val dayMillis = 24L * 60 * 60 * 1000
+            val thirtyDaysAgo = System.currentTimeMillis() - (30L * dayMillis)
             dao.deleteOldPickedItems(thirtyDaysAgo)
+
+            // 7 天保留期兜底：用户没手动清理时，入库满 7 天的记录（含待取）自动删除。
+            // 与设置页「清理 7 天前记录」共用同一口径（PickupRepository.RETENTION_DAYS）。
+            val sevenDaysAgo = System.currentTimeMillis() - (PickupRepository.RETENTION_DAYS * dayMillis)
+            dao.deleteItemsOlderThan(sevenDaysAgo)
+            // 同步清掉对应的删除留档：原记录都删了，留档只防复活、无保留价值
+            database.deletedPickupItemDao().deleteOldDeletedItems(sevenDaysAgo)
 
             // 留档表只需挡住「同一条短信被重新导入」，30 天后原短信早已不在收件箱热区，
             // 不清理就会随用户每次删除无界增长。

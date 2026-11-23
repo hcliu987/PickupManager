@@ -43,6 +43,9 @@ class PickupRepository private constructor(context: Context) {
     companion object {
         private const val TAG = "PickupRepository"
 
+        /** 历史记录保留天数：入库满 7 天的记录由手动清理或每天兜底任务删除。 */
+        const val RETENTION_DAYS = 7
+
         /**
          * 本应用写入的全部 SharedPreferences 文件名，与 README 第 4 节
          * 「数据只落在本地」的 7 项名单一一对应。
@@ -103,6 +106,11 @@ class PickupRepository private constructor(context: Context) {
     fun getExpiredCount(): Flow<Int> = dao.getExpiredCount()
     
     suspend fun getItemById(id: Long): PickupItem? = dao.getItemById(id)
+
+    /** 7 天保留期：统计/清理入库满 7 天的记录（含待取）。 */
+    suspend fun countItemsOlderThan(beforeTime: Long): Int = dao.countItemsOlderThan(beforeTime)
+
+    suspend fun deleteItemsOlderThan(beforeTime: Long) = dao.deleteItemsOlderThan(beforeTime)
     
     suspend fun insertItem(item: PickupItem): Long = dao.insertItem(item)
 

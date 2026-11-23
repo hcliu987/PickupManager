@@ -182,6 +182,17 @@ interface PickupItemDao {
     
     @Query("DELETE FROM pickup_items WHERE status = 1 AND markedTime < :beforeTime")
     suspend fun deleteOldPickedItems(beforeTime: Long)
+
+    /**
+     * 7 天保留期兜底：删除入库满 7 天的**所有**记录（含待取）。
+     * 用户已确认「没手动清理的话第八天自动删」，因此待取件也在此列。
+     * 手动清理与 WorkManager 每天兜底共用这一条 SQL，口径一致。
+     */
+    @Query("DELETE FROM pickup_items WHERE receiveTime < :beforeTime")
+    suspend fun deleteItemsOlderThan(beforeTime: Long)
+
+    @Query("SELECT COUNT(*) FROM pickup_items WHERE receiveTime < :beforeTime")
+    suspend fun countItemsOlderThan(beforeTime: Long): Int
     
     @Query("DELETE FROM pickup_items")
     suspend fun deleteAll()

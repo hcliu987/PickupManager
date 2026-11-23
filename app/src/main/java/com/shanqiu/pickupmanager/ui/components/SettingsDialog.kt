@@ -34,7 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,9 +65,12 @@ fun SettingsDialog(
     currentDays: Int,
     onDismiss: () -> Unit,
     onSave: (Int) -> Unit,
-    onClearAll: () -> Unit = {}
+    onClearAll: () -> Unit = {},
+    onCountCleanable: suspend () -> Int = { 0 },
+    onCleanOld: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val cleanScope = rememberCoroutineScope()
     var sliderValue by remember { mutableStateOf(currentDays.toFloat()) }
     var summaryEnabled by remember {
         mutableStateOf(PreferenceManager.isSummaryNotificationEnabled(context))
@@ -74,6 +79,8 @@ fun SettingsDialog(
         mutableStateOf(PreferenceManager.isNotificationShowCode(context))
     }
     var showClearConfirm by remember { mutableStateOf(false) }
+    var showCleanConfirm by remember { mutableStateOf(false) }
+    var cleanableCount by remember { mutableStateOf(0) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -277,6 +284,24 @@ fun SettingsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
+                    TextButton(onClick = {
+                        cleanScope.launch {
+                            cleanableCount = onCountCleanable()
+                            showCleanConfirm = true
+                        }
+                    }) {
+                        Text(
+                            text = "清理 7 天前的记录",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
                     TextButton(onClick = { showClearConfirm = true }) {
                         Text(
                             text = "清空全部数据",
@@ -323,6 +348,46 @@ fun SettingsDialog(
             },
             dismissButton = {
                 TextButton(onClick = { showClearConfirm = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    if (showCleanConfirm) {
+        AlertDialog(
+            onDismissRequest = { showCleanConfirm = false },
+            title = {
+                Text(
+                    text = "清理 7 天前的记录？",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = if (cleanableCount > 0)
+                        "将删除入库满 7 天的 $cleanableCount 条记录（含尚未领取的件）。\n\n" +
+                            "即使不手动清理，系统也会在第 8 天自动删除。此操作不可撤销。"
+                    else
+                        "当前没有入库满 7 天的记录，无需清理。",
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Start
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCleanConfirm = false
+                        onDismiss()
+                        onCleanOld()
+                    }
+                ) {
+                    Text("确认清理", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCleanConfirm = false }) {
                     Text("取消")
                 }
             }
