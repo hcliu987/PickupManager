@@ -21,6 +21,7 @@
 """
 import contextlib
 import io
+import re
 import shutil
 import sys
 
@@ -45,9 +46,13 @@ REAL_DETAIL = ROOT / 'docs' / 'KNOWN_ISSUES.md'
 # 为什么要第五列：README 精简后，明细（含大部分行号引用与计数声明）搬到了
 # docs/KNOWN_ISSUES.md。突变必须打在**文本真正所在的那一份**上，否则
 # `original.count(old) == 0`，用例会静默退化成"什么都没测"。
+#
+# 计数类用例不要写死数字（1518/123 这类会随代码漂移，写死后 replace 变成
+# 空操作、用例静默失效）——它们在 test_mutations_are_caught 里用
+# check_doc_refs.NUM_CLAIMS 的正则动态定位，数字怎么变都测的是同一件事。
 CASES = [
-    ('普通行号漂移（±4）',
-     '`MainScreen.kt:236` 复制取件信息', '`MainScreen.kt:240` 复制取件信息', '行号', 'DETAIL'),
+    ('行号漂移（±3，单行引用窗口已收窄到 ±2）',
+     '`ComposeMainActivity.kt:177` 也调了一次', '`ComposeMainActivity.kt:180` 也调了一次', '行号对不上', 'DETAIL'),
     ('裸类名引用带扩展名形式的漂移',
      '因为 `ComposeMainActivity.kt:177` 也调了一次',
      '因为 `ComposeMainActivity.kt:135` 也调了一次', '行号', 'DETAIL'),
@@ -61,21 +66,8 @@ CASES = [
      '`ui/components/RuleMatchingScreen.kt:50, 1137`', '整段都是空行', 'DETAIL'),
     ('README 侧的行号引用（两份文档都要被覆盖）',
      '`ShareUtils.kt:18`（SmsForwarder', '`ShareUtils.kt:9999`（SmsForwarder', '行号', 'README'),
-    ('计数类：含中文的字符串字面量',
-     'Kotlin 里有 **1420 处**含中文的字符串字面量',
-     'Kotlin 里有 **999 处**含中文的字符串字面量', '含中文的字符串字面量', 'DETAIL'),
-    ('计数类：单测用例数',
-     '当前共 **119 个用例**', '当前共 **34 个用例**', '用例数', 'DETAIL'),
-    ('计数类：strings.xml 条数',
-     '`res/values/strings.xml` 有 **25** 条', '`res/values/strings.xml` 有 **24** 条', 'strings.xml', 'DETAIL'),
     ('计数类：包文件数',
      '| `util/` | 24 |', '| `util/` | 21 |', '文件数不符', 'README'),
-    ('计数类：XML 硬编码中文文案数',
-     '布局与资源 XML 里的硬编码中文文案有 **28 处**',
-     '布局与资源 XML 里的硬编码中文文案有 **0 处**', 'XML 硬编码中文', 'DETAIL'),
-    ('计数类：审计工具自测用例数（R7 新增的复算项）',
-     '`tools/audit/test_*.py` 共 **50** 个用例',
-     '`tools/audit/test_*.py` 共 **48** 个用例', '审计工具自测用例数', 'README'),
 ]
 
 
@@ -125,6 +117,29 @@ class TestCheckDocRefs(unittest.TestCase):
                 code, out = run_on(src.replace(old, new), which)
                 self.assertNotEqual(0, code, f'{name}: 改坏之后校验器仍然通过\n{out}')
                 self.assertIn(keyword, out, f'{name}: 报错里没有出现 {keyword}\n{out}')
+
+    def test_numeric_claims_are_caught_dynamically(self):
+        """每个"计数类"声明：把真实数字改坏，校验器必须报出来。
+
+        动态定位而不是写死原文（1518/123 这类数字会随代码漂移）：
+        用校验器自己的 NUM_CLAIMS 正则切出声明的真实跨度，再整体替换 ——
+        这样数字怎么变，测的都是同一件事。这同时覆盖了"删掉数字也不许过"
+        的反面：声明存在但数字错，同样必须红。
+        """
+        for what, pat, _ in check_doc_refs.NUM_CLAIMS:
+            with self.subTest(name=what):
+                for which, src in (('README', self.original), ('DETAIL', self.detail)):
+                    m = pat.search(src)
+                    if not m:
+                        continue
+                    # 把所有捕获组数字统统 +111，保证与实测值不同
+                    changed = src[:m.start()] + re.sub(
+                        r'\d+', lambda mm: str(int(mm.group()) + 111), m.group()
+                    ) + src[m.end():]
+                    self.assertNotEqual(src, changed, f'{what}: {which} 里改数字是空操作')
+                    code, out = run_on(changed, which)
+                    self.assertNotEqual(0, code, f'{what}: 数字改坏后校验器仍然通过\n{out}')
+                    self.assertIn(what, out, f'{what}: 报错里没有点出这项声明\n{out}')
 
     def test_deleting_a_claim_does_not_pass(self):
         """把数字声明整句删掉也必须失败 —— 否则"删掉数字"就成了过关心法。

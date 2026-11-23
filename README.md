@@ -216,7 +216,7 @@ python3 tools/check_doc_refs.py         # 文档与代码一致性自检（含�
 python3 tools/check_log_privacy.py      # 发布可见日志里不带用户数据
 ```
 
-另有 2 个环境变量门控的评测用例（未设置时自动跳过，不影响 CI 与他人构建），以及 9 条审计脚本（脱敏扫描、历史扫描、提交身份、图标 import、`.gitignore` 纵深、缺陷总表结构等），它们各自的回归测试共 **50** 个用例，即 `tools/audit/test_*.py` 共 **50** 个用例 —— 这个数字由 `tools/check_doc_refs.py` 复算。逐条命令见 `.github/workflows/android.yml`。
+另有 2 个环境变量门控的评测用例（未设置时自动跳过，不影响 CI 与他人构建），以及 9 条审计脚本（脱敏扫描、历史扫描、提交身份、图标 import、`.gitignore` 纵深、缺陷总表结构等），它们各自的回归测试共 **51** 个用例，即 `tools/audit/test_*.py` 共 **51** 个用例 —— 这个数字由 `tools/check_doc_refs.py` 复算。逐条命令见 `.github/workflows/android.yml`。
 
 **产物体积**：release **2.90 MB** / debug **19.79 MB**。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→78 个（28877 行 → 22392 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 2.83 MB / 2,963,052 字节，见 Releases）。
 
