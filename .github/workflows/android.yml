@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 必须是完整历史：scan_history.py 要让每个提交的所有 blob 都过一遍。
+          # 默认值 fetch-depth: 1 会让"历史扫描"只看见一个提交，却照样打印 ✓。
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v3
+
+      - name: 审计工具的自我测试
+        run: |
+          python3 tools/audit/test_kotlin_lexer.py
+          python3 tools/audit/test_check_icon_imports.py
+          python3 tools/audit/test_check_doc_refs.py
+          python3 tools/audit/test_scan_sensitive.py
+
+      - name: 工作树里没有敏感数据
+        run: python3 tools/audit/scan_sensitive.py .
+
+      - name: git 历史里没有敏感数据（形状判据）
+        # 这条只是**一半**。另一半是精确值判据（--denylist），它要读私有语料派生的清单，
+        # 公开 CI 上跑不了 —— 所以 CI 绿 ≠ 可以 push。推送前在本机补跑：
+        #   python3 tools/audit/scan_history.py . \
+        #       --denylist <私有>/deny_A.local.txt --advisory <私有>/deny_B.local.txt
+        # 为什么必须两条：形状判据只能看"像不像"，而真实取件码与假码同形同值，
+        # 它结构上永远不可能为那一类命中失败（R7 / B-02、M-26）。
+        run: python3 tools/audit/scan_history.py .
+
+      - name: 提交元数据已脱敏
+        run: python3 tools/audit/scan_commit_identity.py .
+
+      - name: 没有死掉的 Compose 图标 import
+        run: python3 tools/audit/check_icon_imports.py .
+
+      - name: .gitignore 能挡住嵌套路径
+        run: python3 tools/audit/check_gitignore_depth.py .
+
+      - name: 缺陷总表结构自检（最终报告的统计数字来自它）
+        run: python3 tools/audit/check_ledger.py .
+
+      - name: Check README code references
+        run: python3 tools/check_doc_refs.py
+
+      - name: Check release-visible logs carry no user data
+        run: python3 tools/check_log_privacy.py
+
+      - name: Assemble debug
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Assemble release (unsigned; no signing secrets on PR builds)
+        run: ./gradlew :app:assembleRelease --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: apks
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
