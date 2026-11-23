@@ -60,6 +60,7 @@ import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.ImportExport
 import androidx.compose.material.icons.rounded.MoreVert
@@ -67,6 +68,7 @@ import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -85,6 +87,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -128,6 +131,8 @@ fun PickupListScreen(
     onDeleteClick: (PickupItem) -> Unit,
     onShareClick: (PickupItem) -> Unit,
     onShareAllClick: (List<PickupItem>) -> Unit,
+    onDeleteAllPicked: () -> Unit,
+    onCountPicked: suspend () -> Int,
     onCardClick: (PickupItem) -> Unit,
     onRefresh: () -> Unit,
     isRefreshing: Boolean,
@@ -136,6 +141,9 @@ fun PickupListScreen(
     paddingValues: FoundationPaddingValues = FoundationPaddingValues(0.dp)
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
+    var showDeletePickedConfirm by remember { mutableStateOf(false) }
+    var pickedToDeleteCount by remember { mutableIntStateOf(0) }
+    val deletePickedScope = rememberCoroutineScope()
     val isDarkTheme = isSystemInDarkTheme()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -254,6 +262,26 @@ fun PickupListScreen(
                             imageVector = Icons.Rounded.Share,
                             contentDescription = "分享全部",
                             tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // 一键删除全部已取件（放在已取页面顶部，不再藏进设置里）
+                if (filterType == PickupItem.STATUS_PICKED && pickedItems.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            deletePickedScope.launch {
+                                pickedToDeleteCount = onCountPicked()
+                                showDeletePickedConfirm = true
+                            }
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "删除全部已取件",
+                            tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -471,6 +499,32 @@ fun PickupListScreen(
                 }
             }
         }
+    }
+
+    // 删除全部已取件的二次确认：写明只删已取、待取不受影响、不可撤销。
+    if (showDeletePickedConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeletePickedConfirm = false },
+            title = { Text("删除全部已取件？") },
+            text = {
+                Text(
+                    if (pickedToDeleteCount > 0)
+                        "将删除 $pickedToDeleteCount 条已取件记录，待取件不受影响。此操作不可撤销。"
+                    else "当前没有已取件记录，无需删除。"
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeletePickedConfirm = false
+                        if (pickedToDeleteCount > 0) onDeleteAllPicked()
+                    }
+                ) { Text("确认删除", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeletePickedConfirm = false }) { Text("取消") }
+            }
+        )
     }
 }
 

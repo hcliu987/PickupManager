@@ -111,6 +111,11 @@ class PickupRepository private constructor(context: Context) {
     suspend fun countItemsOlderThan(beforeTime: Long): Int = dao.countItemsOlderThan(beforeTime)
 
     suspend fun deleteItemsOlderThan(beforeTime: Long) = dao.deleteItemsOlderThan(beforeTime)
+
+    /** 已取页面「删除全部已取件」：只按 status 统计/删除，不碰其他状态。 */
+    suspend fun countItemsByStatus(status: Int): Int = dao.countItemsByStatus(status)
+
+    suspend fun deleteItemsByStatus(status: Int): Int = dao.deleteItemsByStatus(status)
     
     suspend fun insertItem(item: PickupItem): Long = dao.insertItem(item)
 

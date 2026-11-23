@@ -193,7 +193,17 @@ interface PickupItemDao {
 
     @Query("SELECT COUNT(*) FROM pickup_items WHERE receiveTime < :beforeTime")
     suspend fun countItemsOlderThan(beforeTime: Long): Int
-    
+
+    /**
+     * 已取页面「删除全部已取件」：只统计/删除指定状态的记录，绝不碰待取。
+     * status 作为参数传入而非写死 1，便于将来对任意状态复用；UI 只传 STATUS_PICKED。
+     */
+    @Query("SELECT COUNT(*) FROM pickup_items WHERE status = :status")
+    suspend fun countItemsByStatus(status: Int): Int
+
+    @Query("DELETE FROM pickup_items WHERE status = :status")
+    suspend fun deleteItemsByStatus(status: Int): Int
+
     @Query("DELETE FROM pickup_items")
     suspend fun deleteAll()
     

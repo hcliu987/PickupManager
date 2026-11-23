@@ -374,6 +374,30 @@ class ComposePickupViewModel(
         }
     }
 
+    /**
+     * 统计已取件数量，供「已取」页面删除按钮的二次确认弹窗显示「将删除 N 条」。
+     */
+    suspend fun countPickedItems(): Int = repository.countItemsByStatus(PickupItem.STATUS_PICKED)
+
+    /**
+     * 删除全部已取件：只删 STATUS_PICKED，待取件绝不受影响。
+     * 删除后刷新列表、通知与桌面组件，并关掉详情弹窗（正在看的记录可能已被删）。
+     */
+    fun deleteAllPickedItems() {
+        viewModelScope.launch(coroutineExceptionHandler) {
+            try {
+                val deleted = repository.deleteItemsByStatus(PickupItem.STATUS_PICKED)
+                Log.i(TAG, "删除全部已取件：$deleted 条")
+                hideDetailDialog()
+                refreshData()
+                PickupSummaryNotifier.refresh(getApplication<Application>())
+                com.shanqiu.pickupmanager.widget.WidgetSyncHelper.notifyWidgetDataChanged(getApplication())
+            } catch (e: Throwable) {
+                Log.e(TAG, "deleteAllPickedItems 异常: ${e.message}", e)
+            }
+        }
+    }
+
     fun resetCopySuccess() {
         _copySuccess.value = false
     }

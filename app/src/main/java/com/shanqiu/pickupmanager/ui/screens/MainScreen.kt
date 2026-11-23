@@ -219,6 +219,8 @@ fun MainScreen(
                 onShareAllClick = { items ->
                     ShareUtils.sharePickupItems(context, items)
                 },
+                onDeleteAllPicked = { viewModel.deleteAllPickedItems() },
+                onCountPicked = { viewModel.countPickedItems() },
                 onCardClick = { item ->
                     viewModel.showDetailDialog(item)
                 },

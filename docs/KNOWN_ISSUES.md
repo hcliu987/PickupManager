@@ -199,7 +199,7 @@ private fun savePickupCode(result: PickupResult, senderNumber: String) {
 
 ### 8. 无多语言
 
-Kotlin 里有 **1518 处**含中文的字符串字面量（**口径**：先剔除注释，再统计双引号字面量里含中日韩汉字的个数 —— `tools/check_doc_refs.py` 复算这个数字，不靠人工数）；`res/values/strings.xml` 有 **25** 条；布局与资源 XML 里的硬编码中文文案有 **28 处**（全在 8 个小部件布局的 `android:text` 与提示文案上）。`values-en` 不存在。
+Kotlin 里有 **1526 处**含中文的字符串字面量（**口径**：先剔除注释，再统计双引号字面量里含中日韩汉字的个数 —— `tools/check_doc_refs.py` 复算这个数字，不靠人工数）；`res/values/strings.xml` 有 **25** 条；布局与资源 XML 里的硬编码中文文案有 **28 处**（全在 8 个小部件布局的 `android:text` 与提示文案上）。`values-en` 不存在。
 
 > 本节此前写的是"819 处"与"布局与资源 XML 里的中文为 0"，两个都不对。前者是因为**没把口径写下来**：同一仓库、同一问题能数出 819 / 1375 / 1376 三个值，差别全在"注释算不算""字符串里的 `//` 会不会把这行截断"；后者是纯粹的错。现在这两个数字都由脚本复算，口径就写在这一段里。
 
@@ -227,7 +227,7 @@ Kotlin 里有 **1518 处**含中文的字符串字面量（**口径**：先剔�
 
 修复前 `PickupSmsParserV2.kt`、`RuleBasedPickupParser.kt`、`PickupNotificationListener.kt` 等多处会打印短信原文或用户真实地址。release 包靠 `proguard-rules.pro` 的 `-assumenosideeffects` 移除了 `Log.v/d/i`，但**debug 包全裸**，且 `Log.w/e` 不受该规则约束。
 
-另外 `RuleBasedPickupParser.kt` 的**代码注释**里写着一个真实小区名；`<application>` 上曾同时写 `allowBackup="true"` 与 `fullBackupContent="false"`（当前状态见 `AndroidManifest.xml:31`），语义互相矛盾（前者允许备份、后者拒绝，实际行为取决于系统版本）。
+另外 `RuleBasedPickupParser.kt` 的**代码注释**里写着一个真实小区名；`<application>` 上曾同时写 `allowBackup="true"` 与 `fullBackupContent="false"`（当前状态见 `AndroidManifest.xml:41`），语义互相矛盾（前者允许备份、后者拒绝，实际行为取决于系统版本）。
 
 **处理结果（2026-09-19）：已修。** 日志统一走 `util/PrivacyLog.kt` 的 `privacyRef()`，只输出 `len=字符数#hashCode十六进制`；注释里的真实地址换成虚构样例；`allowBackup` 显式置 `false`，并删掉两个无人引用的备份规则 XML（保留着只会让人以为备份被配置过）。
 

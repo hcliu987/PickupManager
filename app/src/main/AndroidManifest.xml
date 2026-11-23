@@ -22,6 +22,15 @@
          ⚠️ 它同样是 Play 受限权限，上架需提交用途说明且不保证通过；
          若走 F-Droid / 直接分发 APK 则不受限。 -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- #23：WidgetActionService 的签名级归属权限。
+         只有以本应用签名签出的组件才持有它；小部件按钮的 PendingIntent 由本应用
+         创建并以本应用身份启动服务，因此正常点击天然通过；外部应用伪造 intent
+         时拿不到该权限，会被系统直接拒绝（在 onStartCommand 之前）。 -->
+    <permission
+        android:name="com.shanqiu.pickupmanager.permission.INTERNAL_WIDGET_ACTION"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.shanqiu.pickupmanager.permission.INTERNAL_WIDGET_ACTION" />
     <!-- R5 / L-08：删除 WAKE_LOCK。原注释称"Widget goAsync 需要 WakeLock"，
          但全仓 0 处 newWakeLock / PowerManager.WakeLock 引用，声明从未被使用；
          goAsync 的保活由 PendingResult 提供，与 WakeLock 无关。
@@ -112,6 +121,7 @@
             android:name=".widget.WidgetActionService"
             android:enabled="true"
             android:exported="true"
+            android:permission="com.shanqiu.pickupmanager.permission.INTERNAL_WIDGET_ACTION"
             android:foregroundServiceType="dataSync" />
 
         <!-- 取件码桌面小部件 - 3×3 默认尺寸 -->
