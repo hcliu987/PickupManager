@@ -100,13 +100,13 @@ class ComposePickupViewModel(
     // 这解决了：跨进程写入数据库后主进程的 Room Flow 没有自动 invalidate 的问题
     @OptIn(ExperimentalCoroutinesApi::class)
     private val allPendingItemsCache: StateFlow<List<PickupItem>> = _refreshTrigger
-        .flatMapLatest { repository.getItemsByStatus(PickupItem.STATUS_PENDING) }
+        .flatMapLatest { repository.getItemsByStatusLite(PickupItem.STATUS_PENDING) }
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
     @OptIn(ExperimentalCoroutinesApi::class)
     val pickedItemsCache: StateFlow<List<PickupItem>> = _refreshTrigger
-        .flatMapLatest { repository.getItemsByStatus(PickupItem.STATUS_PICKED) }
+        .flatMapLatest { repository.getItemsByStatusLite(PickupItem.STATUS_PICKED) }
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
@@ -222,8 +222,17 @@ class ComposePickupViewModel(
     }
     
     fun showDetailDialog(item: PickupItem) {
+        // 列表投影不含 rawSms：先用列表项立即显示弹窗（无延迟），再异步补全短信原文。
         _selectedItem.value = item
         _showDetailDialog.value = true
+        viewModelScope.launch(coroutineExceptionHandler) {
+            repository.getItemById(item.id)?.let { full ->
+                // 仅当弹窗仍在显示同一条时才替换，避免快速切换卡片的竞态
+                if (_selectedItem.value?.id == item.id) {
+                    _selectedItem.value = full
+                }
+            }
+        }
     }
     
     fun hideDetailDialog() {

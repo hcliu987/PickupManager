@@ -320,6 +320,30 @@ class PickupIngestTest {
         }
     }
 
+    /**
+     * 规则匹配页与自动入库必须共用同一套公司口径：
+     * 同一条短信，UI 分析显示的公司名 = 入库后卡片的公司名，
+     * 否则用户粘贴短信会看到「兔喜生活」，存进去却变成「中通快递」。
+     */
+    @Test
+    fun `规则匹配页公司规范器与入库结果一致_驿站签名不显示`() {
+        val cases = listOf(
+            "【兔喜生活】您有包裹已到达铜山利国中通快递兔喜5号柜兔喜快递柜，取件码为526956" to "中通快递",
+            "【妈妈驿站】取货码3-2-957，您有圆通快递包裹，已到利国镇金三角东100米路南圆通" to "圆通快递",
+            "【邮乐购】您的中国邮政快递*8127已送达，请凭2-4-2956到石门北利国镇邮政局取款机旁边小屋领取" to "中国邮政",
+            "【欢猫驿站】您的韵达快递包裹已到东坡大道(利国实验小学南六十米路东)，请凭17-8-2224取件" to "韵达快递",
+        )
+        cases.forEach { (sms, expected) ->
+            val parsed = RuleBasedPickupParser.parse(sms)
+            // 规则匹配页走的入口
+            val uiCompany = CourierCompanyResolver.resolve(sms, parsed.company)
+            // 自动入库走的入口
+            val storedCompany = PickupIngest.parse(sms, "10655555", t).items.first().courierCompany
+            assertEquals("UI 公司名短信：$sms", expected, uiCompany)
+            assertEquals("两处口径必须一致，短信：$sms", storedCompany, uiCompany)
+        }
+    }
+
     /** 地址里带括号补充说明时右括号不能被 trimEnd 剥掉；承运方要删干净、柜号品牌要留住。 */
     @Test
     fun `真实短信地址保留完整括号与柜号品牌`() {

@@ -82,6 +82,9 @@ class PickupRepository private constructor(context: Context) {
     suspend fun getAllItemsList(): List<PickupItem> = dao.getAllItemsList()
     
     fun getItemsByStatus(status: Int): Flow<List<PickupItem>> = dao.getItemsByStatus(status)
+
+    /** 列表专用：不加载 rawSms，详情需要时再走 [getItemById]。 */
+    fun getItemsByStatusLite(status: Int): Flow<List<PickupItem>> = dao.getItemsByStatusLite(status)
     
     fun getItemsByAddress(addressTag: String): Flow<List<PickupItem>> = dao.getItemsByAddress(addressTag)
     

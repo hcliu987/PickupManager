@@ -93,6 +93,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shanqiu.pickupmanager.data.model.PickupItem
 import com.shanqiu.pickupmanager.util.AddressTag
+import com.shanqiu.pickupmanager.util.CourierCompanyResolver
 import com.shanqiu.pickupmanager.util.PickupCodeExtractorV3
 import com.shanqiu.pickupmanager.util.RuleBasedPickupParser
 import com.shanqiu.pickupmanager.util.SelfLearningManager
@@ -164,6 +165,8 @@ fun RuleMatchingScreen(
     
     var smsContent by remember { mutableStateOf("") }
     var ruleResult by remember { mutableStateOf<RuleBasedPickupParser.ParseResult?>(null) }
+    // 与自动入库共用同一套快递公司规范器：只显示真实承运方，不显示「兔喜生活」这类驿站品牌
+    var resolvedCourier by remember { mutableStateOf("") }
     var confidenceResult by remember { mutableStateOf<SelfLearningManager.ConfidenceResult?>(null) }
     var isAnalyzing by remember { mutableStateOf(false) }
     var showResult by remember { mutableStateOf(false) }
@@ -392,10 +395,14 @@ fun RuleMatchingScreen(
                             isAnalyzing = true
                             val result = RuleBasedPickupParser.parse(smsContent)
                             ruleResult = result
+                            // 统一到入库层口径：全文优先识别真实承运方，驿站签名不算
+                            val company = CourierCompanyResolver.resolve(smsContent, result.company)
+                            resolvedCourier = company
+                            editedCourier = company
                             val confidence = learningManager.evaluateConfidence(
                                 result.codes,
                                 result.address.firstOrNull(),
-                                result.company.firstOrNull()
+                                company
                             )
                             confidenceResult = confidence
                             showUncertainNotice = confidence.needsConfirmation
@@ -743,7 +750,7 @@ fun RuleMatchingScreen(
                         ResultDetailCard(
                             pickupCode = if (isEditing) editedPickupCode else result.codes.joinToString(", "),
                             address = if (isEditing) editedAddress else result.address.firstOrNull() ?: "",
-                            courierCompany = if (isEditing) editedCourier else result.company.firstOrNull() ?: "",
+                            courierCompany = if (isEditing) editedCourier else resolvedCourier,
                             trackingNumber = result.trackingNumber,
                             packageCount = result.packageCount,
                             hasNoCode = result.hasNoCode,
@@ -801,7 +808,7 @@ fun RuleMatchingScreen(
                             
                             val finalPickupCode = if (isEditing) editedPickupCode else result.codes.joinToString(", ")
                             val finalAddress = if (isEditing) editedAddress else result.address.firstOrNull() ?: ""
-                            val finalCourier = if (isEditing) editedCourier else result.company.firstOrNull() ?: ""
+                            val finalCourier = if (isEditing) editedCourier else resolvedCourier
                             
                             Button(
                                 onClick = {
@@ -814,7 +821,7 @@ fun RuleMatchingScreen(
                                         if (isEditing) {
                                             val originalCodes = result.codes
                                             val correctedCodes = codeList
-                                            if (originalCodes != correctedCodes || editedAddress != (result.address.firstOrNull() ?: "") || editedCourier != (result.company.firstOrNull() ?: "")) {
+                                            if (originalCodes != correctedCodes || editedAddress != (result.address.firstOrNull() ?: "") || editedCourier != resolvedCourier) {
                                                 learningManager.recordCorrection(
                                                     SelfLearningManager.CorrectionRecord(
                                                         timestamp = System.currentTimeMillis(),
@@ -935,7 +942,7 @@ fun RuleMatchingScreen(
                                     isEditing = false
                                     editedPickupCode = result.codes.joinToString(", ")
                                     editedAddress = result.address.firstOrNull() ?: ""
-                                    editedCourier = result.company.firstOrNull() ?: ""
+                                    editedCourier = resolvedCourier
                                 },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {

@@ -82,7 +82,7 @@ object AddressTag {
  * 这里只在入库前覆写展示字段，三条采集通道（实时广播 / 批量导入 / 通知兜底）
  * 因为都走 [PickupIngest.parse]，自动一起生效。
  */
-private object CourierCompanyResolver {
+object CourierCompanyResolver {
 
     private const val FALLBACK = "快递"
 

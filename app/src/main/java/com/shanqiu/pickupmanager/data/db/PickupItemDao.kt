@@ -26,6 +26,21 @@ interface PickupItemDao {
     @Query("SELECT * FROM pickup_items WHERE status = :status ORDER BY receiveTime DESC")
     fun getItemsByStatus(status: Int): Flow<List<PickupItem>>
 
+    /**
+     * 列表专用投影：显式列出字段并把 rawSms 置空。
+     *
+     * 列表在 ViewModel 里常驻三份完整 PickupItem（待取原始、待取按天数过滤、已取），
+     * 每份都带短信全文，记录一多就是三份重复文本。详情弹窗与「复制原文」才需要
+     * rawSms，那时按 id 走 [getItemById] 单独取。字段顺序与 [PickupItem] 构造函数一致。
+     */
+    @Query("""
+        SELECT id, pickupCode, address, addressTag, courierCompany, trackingNumber,
+               receiveTime, expireTime, status, '' AS rawSms, senderPhone,
+               markedTime, restoreTime, notes, phoneNumber
+        FROM pickup_items WHERE status = :status ORDER BY receiveTime DESC
+    """)
+    fun getItemsByStatusLite(status: Int): Flow<List<PickupItem>>
+
     @Query("SELECT * FROM pickup_items WHERE status = :status ORDER BY receiveTime DESC")
     suspend fun getItemsByStatusList(status: Int): List<PickupItem>
     

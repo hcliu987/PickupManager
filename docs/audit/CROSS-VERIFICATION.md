@@ -70,7 +70,7 @@ Android 单元测试（需本机 Gradle 缓存与 SDK；若环境不符可跳过
 ```bash
 GRADLE_USER_HOME=D:/.gradle ANDROID_HOME=D:/.gradle/android-sdk \
 ANDROID_SDK_ROOT=D:/.gradle/android-sdk ./gradlew --offline :app:testDebugUnitTest --rerun
-# 预期：122 用例 / 2 跳过 / 0 失败（2 个跳过是依赖外部语料的评测，设计即跳过，见 U-1）
+# 预期：123 用例 / 2 跳过 / 0 失败（2 个跳过是依赖外部语料的评测，设计即跳过，见 U-1）
 ```
 
 ## 4. 缺陷总表摘要

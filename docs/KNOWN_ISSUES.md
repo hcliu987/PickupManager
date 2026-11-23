@@ -213,7 +213,7 @@ Kotlin 里有 **1510 处**含中文的字符串字面量（**口径**：先剔�
 
 `android.util.Log` 在 JVM 下抛 "not mocked" 曾使这 20 个用例全部失败，现已通过 `testOptions.unitTests.isReturnDefaultValues = true` 解决。**这个开关有代价**：它同时会让被测代码里的真实 `android.*` 调用静默返回默认值，从而掩盖逻辑错误（记在 `docs/audit/00-defect-ledger.md` 的 M-15，未改）。
 
-**处理结果（2026-09-19）：基线已建，覆盖仍不完整。** 新增 `RuleBasedPickupParserTest`（14 个用例，全部使用虚构短信）与一个环境变量门控的准确率评测 `RuleBasedPickupParserAccuracyEval`。当前共 **122 个用例**，其中 **2 个**由环境变量门控、默认跳过（两个数字都由 `tools/check_doc_refs.py` 复算）。
+**处理结果（2026-09-19）：基线已建，覆盖仍不完整。** 新增 `RuleBasedPickupParserTest`（14 个用例，全部使用虚构短信）与一个环境变量门控的准确率评测 `RuleBasedPickupParserAccuracyEval`。当前共 **123 个用例**，其中 **2 个**由环境变量门控、默认跳过（两个数字都由 `tools/check_doc_refs.py` 复算）。
 
 评测在本地标注集上的结果是 `取件码命中 100.0% (1133/1133)`。**这个数字必须带着口径读**：它测的是"改规则之后有没有把已知的做坏"，语料与规则同源，属于 in-sample，不能当作对外宣传的准确率。真正的留出集评测见 README 第 7 节「解析准确率怎么量」。
 
