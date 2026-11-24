@@ -568,13 +568,15 @@ class ComposeMainActivity : ComponentActivity() {
      * 是否联网、走不走代理完全由用户和设备决定，"不联网"卖点不受影响。
      */
     private fun openReleasePage() {
-        val url = "https://gitee.com/884024720/pickup-manager/releases"
+        // 直接指向 APK 文件：点一下即下载，无需在 Release 页里再找附件。
+        // 本应用不声明 INTERNET 权限，链接交给浏览器，是否联网由用户决定。
+        val url = "https://gitee.com/884024720/pickup-manager/releases/download/v1.1/pickupmanager.apk"
         runCatching {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
         }.onFailure {
-            Toast.makeText(this, "无法打开浏览器，请手动访问 Gitee 查看更新", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "无法打开浏览器，请手动访问 Gitee 下载 APK", Toast.LENGTH_LONG).show()
         }
     }
     

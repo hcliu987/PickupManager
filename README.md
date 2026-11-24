@@ -166,7 +166,7 @@ Android 7.0+（`minSdk 24`）。release 包约 2.8 MB，无原生库、无后端
 | `widget/` | 15 | 7 个 Provider + 基类 + 列表服务 + 前台刷新服务 + 品牌适配 + 快照 |
 | `worker/` | 1 | 过期检查与历史记录清理 |
 
-根包另有 `PickupApplication.kt`，主源 `.kt` 共 **78 个文件、22534 行**（文件数同样由 `tools/check_doc_refs.py` 核对）。
+根包另有 `PickupApplication.kt`，主源 `.kt` 共 **78 个文件、22536 行**（文件数同样由 `tools/check_doc_refs.py` 核对）。
 
 - **解析层**：主解析器按五级优先策略取码，**第 0 级是引导词**（短信里明写「取件码为 / 凭 / 输入」就直接取后面那串）；未命中时回落到使用多维加权评分与一票否决规则的 `PickupSmsParserV2`。**它不是模型，是纯规则。** 三条采集通道（广播 / 导入 / 通知）统一经 `util/PickupIngest.kt` 完成解析、取件码归一（`PickupCodeNormalizer`）与地址标签生成（`AddressTag`）。
 - **数据层**：Room `version = 10`，三张表（`PickupItem` / `SavedAddress` / `DeletedPickupItem`），`app/schemas/` 导出 8/9/10 供迁移校验。状态常量仍定义着"已过期"，但**现在只有 0 待取 / 1 已取会被写入**，过期改由展示层判断（见 #4）。
@@ -218,7 +218,7 @@ python3 tools/check_log_privacy.py      # 发布可见日志里不带用户数�
 
 另有 2 个环境变量门控的评测用例（未设置时自动跳过，不影响 CI 与他人构建），以及 9 条审计脚本（脱敏扫描、历史扫描、提交身份、图标 import、`.gitignore` 纵深、缺陷总表结构等），它们各自的回归测试共 **51** 个用例，即 `tools/audit/test_*.py` 共 **51** 个用例 —— 这个数字由 `tools/check_doc_refs.py` 复算。逐条命令见 `.github/workflows/android.yml`。
 
-**产物体积**：release **2.90 MB** / debug **19.79 MB**。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→78 个（28877 行 → 22534 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 2.83 MB / 2,963,052 字节，见 Releases）。
+**产物体积**：release **2.90 MB** / debug **19.79 MB**。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→78 个（28877 行 → 22536 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 2.83 MB / 2,963,052 字节，见 Releases）。
 
 ---
 

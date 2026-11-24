@@ -154,7 +154,7 @@ fun AboutDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "检查更新（打开 Gitee 发布页）",
+                            text = "下载最新版 APK（Gitee 直链）",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium
                         )
