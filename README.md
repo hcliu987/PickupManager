@@ -8,6 +8,17 @@
 >
 > **主要定制**：快递公司只显示真实承运方（不再显示兔喜生活等驿站品牌）· 京东等短信地址解析修正 · 规则匹配页与自动入库口径统一 · 快递名称放大高亮 · 7 天记录保留与手动清理 · 一加 PHM110 真机验证。
 
+> **当前版本：v1.2（versionCode 3）更新内容**
+>
+> - 启动时自动检查更新，发现新版弹窗提示
+> - 菜单 / 关于页检查更新，一步下载最新 APK
+> - 已取页面一键删除（红色按钮 + 二次确认）
+> - 7 天记录保留与手动清理
+> - 快递公司只显示真实承运方
+> - 一加 PHM110 真机验证
+>
+> 最新 APK 永久直链：<https://gitee.com/884024720/pickup-manager/releases/download/latest/pickupmanager.apk>（随发版脚本自动重建，始终指向最新版）；更新内容的机器可读源是根目录 `version.json`。
+
 **「码上取」——让取件回归简单**
 
 一个**本地优先**的安卓快递取件助手：自动读取取件短信，解析出取件码、**真实快递公司**与地址，显示在桌面小部件上。
@@ -38,6 +49,7 @@ Android 7.0+（`minSdk 24`）。release 包约 2.8 MB，无原生库、无后端
 | 通知栏汇总 | 下拉栏常驻一条「待取 N 件」，随入库 / 已取自动更新，点开进应用；默认只显示数量，设置里可整条关闭或选择显示最新取件码，**地址在任何情况下都不进通知** |
 | 品牌适配 | 识别 MIUI/HyperOS 等，按其差异引导"通知类短信"、电池优化、自启动权限 |
 | 自动清理 | 入库满 **7 天**的记录由 WorkManager 每天兜底删除（含待取）；也可在设置里「清理 7 天前的记录」手动提前删。已删留档保留 30 天防短信复活 |
+| 应用内更新 | 启动后台检查一次 `version.json`，发现更高 `versionCode` 弹窗提示（立即下载 / 稍后 / 不再提示此版本）；列表菜单与关于页也可手动检查并一步打开最新 APK 直链。网络失败静默，不影响正常使用（详见第 6 节） |
 | 机型覆盖 | 已在**一加 PHM110（Android 15）**做真机验证（6 条真实短信解析、卡片显示、DB 落库）；历史版本在小米 / HyperOS 上验证过。其它品牌未做真机验证，问题请附机型与系统版本 |
 
 ### 界面
@@ -204,9 +216,22 @@ export PICKUP_KEYSTORE_PASSWORD=... PICKUP_KEY_ALIAS=... PICKUP_KEY_PASSWORD=...
 
 签名信息**不写在构建脚本里**，只从这四个环境变量读取。未设置时构建不会失败，只是产出 `app-release-unsigned.apk`（未签名，不能直接安装），clone 仓库的人无需任何密钥即可验证构建。
 
-> **普通用户请勿自行构建**：签名发布版已在 [GitHub Releases](https://github.com/hcliu987/PickupManager/releases/tag/v1.1) 提供，直接下载安装即可。下面四个环境变量是给需要自行打包的开发者准备的。
+> **普通用户请勿自行构建**：签名发布版可从 Gitee 永久直链 <https://gitee.com/884024720/pickup-manager/releases/download/latest/pickupmanager.apk> 一步下载（始终指向最新版），历史版本见 [GitHub Releases](https://github.com/hcliu987/PickupManager/releases)。下面四个环境变量是给需要自行打包的开发者准备的。
 
 自签分发请**永久保管**密钥：覆盖安装必须同一签名，换密钥等于所有已安装用户必须卸载重装，而取件记录与地址库都在应用私有数据库里，会随之丢失。
+
+### 应用内更新怎么工作
+
+| 环节 | 实现 |
+|---|---|
+| 更新源 | 仓库根 `version.json`，字段为 `versionCode` / `versionName` / `changelog` / `apkUrl`；Gitee contents API 公开可读，国内直连 |
+| 检查时机 | App 启动时后台一次；列表菜单「检查更新」与关于页按钮可随时手动打开下载页 |
+| 判定 | 服务端 `versionCode` 大于本机才提示；点过「不再提示此版本」后该版本不再弹，升级到更高版本会重新提示 |
+| 下载 | 弹窗「立即下载」用系统浏览器打开 `apkUrl`（Gitee latest 直链），应用本身不内置下载器、不请求存储权限 |
+| 失败处理 | 无网络 / 超时 / API 解析失败一律静默跳过，不影响取件功能 |
+| 隐私边界 | 只有一条固定 URL 的 GET 请求，不上传取件码、地址、设备标识；详见第 4 节 |
+
+**发版流程**（维护者）：`python3 tools/release.py --version 1.3 --changelog "..."` 会递增 `versionCode`、重建 Gitee latest Release（固定附件名 `pickupmanager.apk`，避免同名文件累积）、上传并校验 SHA256，`version.json` 随应用自动生效；`--dry-run` 只预览，`--skip-upload` 只打包不上传。版本号必须递增：Android 拒绝降级安装，且更新检查按 `versionCode` 比较，不递增等于更新功能失效。
 
 测试与检查：
 
