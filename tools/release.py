@@ -205,6 +205,7 @@ def main():
     ap.add_argument('--changelog', help='更新说明（用 \\n 换行）')
     ap.add_argument('--dry-run', action='store_true', help='只预览，不落盘/不构建/不上传')
     ap.add_argument('--skip-upload', action='store_true', help='只升版本+打包，不上传 Gitee')
+    ap.add_argument('--no-release', action='store_true', help='跳过同步代码与发布正式 Release')
     args = ap.parse_args()
 
     old_code, old_name = read_versions()
@@ -298,10 +299,17 @@ def main():
     print('\n=== 6. 提交版本改动 ===')
     run(['git', 'add', 'app/build.gradle.kts', 'version.json'])
     run(['git', 'commit', '-m', f'chore: 发版 v{new_name} (code {new_code})'], check=False)
+
+    if not args.no_release:
+        print('\n=== 7. 同步代码并发布正式 Release ===')
+        run([sys.executable, ROOT / 'tools' / 'publish_release.py',
+             '--version', new_name, '--apk', final])
+    else:
+        print('\n[--no-release] 未同步代码、未发布正式 Release。')
+
     print('\n=== 发版完成 ===')
     print(f'  安装包：{final}')
     print(f'  下载直链：{apk_url}')
-    print('  下一步（按需）：git push origin main && git push gitee main')
 
 
 if __name__ == '__main__':

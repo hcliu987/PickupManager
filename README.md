@@ -231,7 +231,9 @@ export PICKUP_KEYSTORE_PASSWORD=... PICKUP_KEY_ALIAS=... PICKUP_KEY_PASSWORD=...
 | 失败处理 | 无网络 / 超时 / API 解析失败一律静默跳过，不影响取件功能 |
 | 隐私边界 | 只有一条固定 URL 的 GET 请求，不上传取件码、地址、设备标识；详见第 4 节 |
 
-**发版流程**（维护者）：`python3 tools/release.py --version 1.3 --changelog "..."` 会递增 `versionCode`、重建 Gitee latest Release（固定附件名 `pickupmanager.apk`，避免同名文件累积）、上传并校验 SHA256，`version.json` 随应用自动生效；`--dry-run` 只预览，`--skip-upload` 只打包不上传。版本号必须递增：Android 拒绝降级安装，且更新检查按 `versionCode` 比较，不递增等于更新功能失效。
+**发版流程**（维护者）：`python3 tools/release.py --version 1.3 --changelog "..."` 一条命令完成：递增 `versionCode` → 同步 `version.json` → 构建签名 → 重建 Gitee latest Release（固定附件名 `pickupmanager.apk`，避免同名文件累积）→ 提交版本改动 → 推送 GitHub/Gitee → 创建两端 **v1.3 正式 Release** 并上传 APK → 双端下载校验 SHA256。版本号必须递增：Android 拒绝降级安装，且更新检查按 `versionCode` 比较，不递增等于更新功能失效。
+
+`tools/release.py` 的开关：`--dry-run` 只预览，`--skip-upload` 只升版本+打包，`--no-release` 跳过同步与正式 Release。若代码已同步、只需补发 Release，单独运行 `python3 tools/publish_release.py`（`--no-push` 不推代码，`--dry-run` 预览）。该脚本**幂等**：Release 或附件已存在就跳过，不重复创建、不覆盖 latest 直链；令牌从钥匙串读取，不落盘、不打印。GitHub Push / API 走系统代理（可用 `PICKUP_GITHUB_PROXY` 覆盖），上传域名 `uploads.github.com` 必须直连。
 
 测试与检查：
 
