@@ -31,6 +31,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,7 +57,8 @@ import com.shanqiu.pickupmanager.R
 
 @Composable
 fun AboutDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onCheckUpdate: () -> Unit = {}
 ) {
     var visible by remember { mutableStateOf(false) }
     val appContext = LocalContext.current
@@ -141,8 +143,24 @@ fun AboutDialog(
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = onCheckUpdate,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "检查更新（打开 Gitee 发布页）",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     Column(
                         modifier = Modifier

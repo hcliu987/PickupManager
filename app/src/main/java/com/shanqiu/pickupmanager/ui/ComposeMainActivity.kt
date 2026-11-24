@@ -204,7 +204,11 @@ class ComposeMainActivity : ComponentActivity() {
                         // 关于弹窗
                         if (showAboutDialogState) {
                             AboutDialog(
-                                onDismiss = { showAboutDialogState = false }
+                                onDismiss = { showAboutDialogState = false },
+                                onCheckUpdate = {
+                                    showAboutDialogState = false
+                                    openReleasePage()
+                                }
                             )
                         }
                         
@@ -551,9 +555,26 @@ class ComposeMainActivity : ComponentActivity() {
         when (menuItem) {
             MenuItemType.IMPORT_SMS -> checkSmsPermissionAndImport(isManualImport = true)
             MenuItemType.ABOUT -> showAboutDialog()
+            MenuItemType.CHECK_UPDATE -> openReleasePage()
             MenuItemType.SETTINGS -> {}
             MenuItemType.ROUTE_SETTINGS -> {}
             else -> {}
+        }
+    }
+
+    /**
+     * 检查更新：用系统浏览器打开 Gitee Release 页。
+     * 本应用不声明 INTERNET 权限也不发任何网络请求 —— 链接交给浏览器，
+     * 是否联网、走不走代理完全由用户和设备决定，"不联网"卖点不受影响。
+     */
+    private fun openReleasePage() {
+        val url = "https://gitee.com/884024720/pickup-manager/releases"
+        runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }.onFailure {
+            Toast.makeText(this, "无法打开浏览器，请手动访问 Gitee 查看更新", Toast.LENGTH_LONG).show()
         }
     }
     

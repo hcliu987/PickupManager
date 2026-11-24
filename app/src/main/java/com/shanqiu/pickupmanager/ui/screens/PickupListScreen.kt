@@ -68,6 +68,7 @@ import androidx.compose.material.icons.rounded.Route
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -315,6 +316,12 @@ fun PickupListScreen(
                                 icon = Icons.Rounded.Route,
                                 iconBackgroundColor = Color(0xFF14B8A6),
                                 action = MenuItemType.ROUTE_SETTINGS
+                            ),
+                            MenuItemData(
+                                label = "检查更新",
+                                icon = Icons.Rounded.SystemUpdate,
+                                iconBackgroundColor = Color(0xFF22C55E),
+                                action = MenuItemType.CHECK_UPDATE
                             ),
                             MenuItemData(
                                 label = "关于/帮助",
@@ -694,7 +701,8 @@ enum class MenuItemType {
     RULE_MATCHING,
     SETTINGS,
     ROUTE_SETTINGS,
-    ABOUT
+    ABOUT,
+    CHECK_UPDATE
 }
 
 private data class MenuItemData(
