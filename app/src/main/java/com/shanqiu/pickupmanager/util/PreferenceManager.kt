@@ -26,6 +26,7 @@ object PreferenceManager {
     private const val KEY_ROUTE_SETTINGS = "route_settings"
     private const val KEY_SUMMARY_NOTIFICATION = "summary_notification_enabled"
     private const val KEY_NOTIFICATION_SHOW_CODE = "notification_show_code"
+    private const val KEY_SKIPPED_VERSION_CODE = "skipped_version_code"
     
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -89,6 +90,14 @@ object PreferenceManager {
 
     fun setNotificationShowCode(context: Context, show: Boolean) {
         getPrefs(context).edit().putBoolean(KEY_NOTIFICATION_SHOW_CODE, show).apply()
+    }
+
+    /** 用户选择"不再提示此版本"时记下的 versionCode。 */
+    fun getSkippedVersionCode(context: Context): Int =
+        getPrefs(context).getInt(KEY_SKIPPED_VERSION_CODE, 0)
+
+    fun setSkippedVersionCode(context: Context, code: Int) {
+        getPrefs(context).edit().putInt(KEY_SKIPPED_VERSION_CODE, code).apply()
     }
 
     fun getRouteSettings(context: Context): RouteSettings {

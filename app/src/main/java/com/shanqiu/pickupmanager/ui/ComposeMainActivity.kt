@@ -34,6 +34,8 @@ import com.shanqiu.pickupmanager.ui.components.AboutDialog
 import com.shanqiu.pickupmanager.ui.components.AddWidgetGuideDialog
 import com.shanqiu.pickupmanager.ui.components.PermissionSetupDialog
 import com.shanqiu.pickupmanager.ui.components.PermissionGuideDialog
+import com.shanqiu.pickupmanager.ui.components.UpdateDialog
+import com.shanqiu.pickupmanager.util.UpdateChecker
 import com.shanqiu.pickupmanager.ui.screens.MainScreen
 import com.shanqiu.pickupmanager.ui.screens.MenuItemType
 import com.shanqiu.pickupmanager.ui.theme.PickupManagerTheme
@@ -59,6 +61,8 @@ class ComposeMainActivity : ComponentActivity() {
     private var isFirstLaunch = false
     private var isImporting = false
     private var showAboutDialogState by mutableStateOf(false)
+    // 更新提示：启动时后台检查，发现新版本则显示弹窗
+    private var updateInfo by mutableStateOf<UpdateChecker.UpdateInfo?>(null)
     private var showPermissionGuideDialog by mutableStateOf(false)
     private var newPermissionResult by mutableStateOf<SmsPermissionChecker.PermissionCheckResult?>(null)
     
@@ -184,6 +188,9 @@ class ComposeMainActivity : ComponentActivity() {
         // 每次启动时检查权限状态，如果缺少关键权限则显示引导弹窗
         checkPermissionsOnStartup()
 
+        // 启动时检查更新：后台拉一次 version.json，发现新版弹提示（失败静默）
+        checkForUpdates()
+
         setContent {
             PickupManagerTheme {
                 provideAnimationConfig(config = AnimationPresets.Standard) {
@@ -208,6 +215,29 @@ class ComposeMainActivity : ComponentActivity() {
                                 onCheckUpdate = {
                                     showAboutDialogState = false
                                     openReleasePage()
+                                }
+                            )
+                        }
+
+                        // 发现新版本提示弹窗
+                        updateInfo?.let { info ->
+                            UpdateDialog(
+                                info = info,
+                                onDownload = {
+                                    val url = info.apkUrl
+                                    updateInfo = null
+                                    runCatching {
+                                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        })
+                                    }.onFailure {
+                                        Toast.makeText(this@ComposeMainActivity, "无法打开浏览器下载", Toast.LENGTH_LONG).show()
+                                    }
+                                },
+                                onDismiss = { updateInfo = null },
+                                onSkipThisVersion = {
+                                    PreferenceManager.setSkippedVersionCode(this@ComposeMainActivity, info.versionCode)
+                                    updateInfo = null
                                 }
                             )
                         }
@@ -559,6 +589,21 @@ class ComposeMainActivity : ComponentActivity() {
             MenuItemType.SETTINGS -> {}
             MenuItemType.ROUTE_SETTINGS -> {}
             else -> {}
+        }
+    }
+
+    /**
+     * 启动时后台检查更新：只拉一次 version.json，不上传任何数据。
+     * 发现新版本且用户未选择"不再提示此版本"时才弹窗；失败一律静默。
+     */
+    private fun checkForUpdates() {
+        lifecycleScope.launch {
+            val (currentCode, _) = UpdateChecker.currentVersion(this@ComposeMainActivity)
+            val info = UpdateChecker.check(currentCode) ?: return@launch
+            if (info.versionCode == PreferenceManager.getSkippedVersionCode(this@ComposeMainActivity)) {
+                return@launch
+            }
+            updateInfo = info
         }
     }
 

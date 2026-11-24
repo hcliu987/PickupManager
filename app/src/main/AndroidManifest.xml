@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 启动时检查更新：仅向 Gitee 公开 API 发一次 GET 读取 version.json，
+         不上传任何取件数据、设备标识或个人信息。用户可在更新弹窗里选择忽略。 -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- R5 / M-13：删除 `USE_EXACT_ALARM`（Google Play 受限权限，仅闹钟/日历类可声明）。
          本应用唯一用到精确闹钟的是 BackgroundProcessManager.scheduleExitAlarm() ——
          一个"后台超时退出"兜底计时器，精度完全不敏感，且它自己已写了降级：

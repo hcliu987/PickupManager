@@ -10,9 +10,9 @@
 
 **「码上取」——让取件回归简单**
 
-一个**完全不联网**的安卓快递取件助手：自动读取取件短信，解析出取件码、**真实快递公司**与地址，显示在桌面小部件上。
+一个**本地优先**的安卓快递取件助手：自动读取取件短信，解析出取件码、**真实快递公司**与地址，显示在桌面小部件上。
 
-无服务器、无账号、无广告、无统计 SDK —— 应用**不声明 `INTERNET` 权限**，短信内容在物理上无法离开设备。可在 `AndroidManifest.xml` 与 `app/build.gradle.kts` 中逐行核对。
+无服务器、无账号、无广告、无统计 SDK。取件数据全部留在本地；应用声明 `INTERNET` 权限**仅用于启动时检查新版本**（向 Gitee 公开 API 发一次 GET 读取 `version.json`），**不上传任何取件内容、设备标识或个人信息**。可自行抓包或在 `AndroidManifest.xml`、`UpdateChecker.kt` 中逐行核对。
 
 本文档是主说明文档，每条已知问题的定位证据与审计记录在 `docs/`。只想用：读第 1、2、4 节。想改代码：读第 3、5、9 节。
 
@@ -65,7 +65,7 @@ Android 7.0+（`minSdk 24`）。release 包约 2.8 MB，无原生库、无后端
 - **`notes`（备注）**：列、管道都有，没有任何界面能输入，永远是空串。
 - **`phoneNumber`**：只有兜底解析器会填，主解析路径不填，界面也不展示。
 - **当前版本不含本地 ONNX 模型推理层与应用内提醒通知**。前者属**暂缓而非废弃**：它与正则匹配的成绩没有明显差距，缺少可信的留出集数据支持其更优，且模型资产约 20 MB、推理开销更大，收益与代价不成比例；若后续有数据证明其优于现行正则方案，会重新评估并打包。后者（新取件提醒与过期提醒）已整套删除，决定不做。2026-11-09 起新增的「通知栏汇总」是另一回事：一条不响铃、不提醒、不做过期的常驻数量卡片，见第 1 节与 `util/PickupSummaryNotifier.kt`。
-- **无多语言**：界面中文硬编码在 Kotlin 里（约 **1529 处**含中文的字符串字面量；口径为先剔注释再统计双引号字面量，由 `tools/check_doc_refs.py` 复算），`values-en` 不存在。
+- **无多语言**：界面中文硬编码在 Kotlin 里（约 **1539 处**含中文的字符串字面量；口径为先剔注释再统计双引号字面量，由 `tools/check_doc_refs.py` 复算），`values-en` 不存在。
 
 每条实验性功能的代码定位见 [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) 第一节。
 
@@ -124,13 +124,13 @@ Android 7.0+（`minSdk 24`）。release 包约 2.8 MB，无原生库、无后端
 
 ## 4、隐私
 
-- **不声明 `INTERNET` 权限**，进程无法建立任何 socket。源码中不存在 `HttpURL` / `OkHttp` / `Retrofit` / `URLConnection` / 加载远程地址的 `WebView`。
+- **唯一的网络行为是检查更新**：`UpdateChecker.kt` 用 JDK 自带的 `HttpURLConnection` 在启动时 GET 一次 Gitee 公开 API 的 `version.json`，对比版本号，仅此而已；网络失败静默忽略。**不上传取件数据、不传设备标识、不传位置**，没有 `OkHttp` / `Retrofit` / 统计 SDK / 加载远程网页的 `WebView`。可在 `UpdateChecker.kt` 中逐行核对请求 URL 与字段。
 - 但合并后的 APK **比手写清单多三项权限**：`ACCESS_NETWORK_STATE`、`RECEIVE_BOOT_COMPLETED`、`WAKE_LOCK`，全部由 `androidx.work` 传递引入（`aapt dump permissions` 可核）。这三项都不是发包能力：前两项一个只判断"有没有网"、一个用于开机恢复排期，第三项是 WorkManager 自己的声明 —— **本应用手写清单里删掉过它，它又被库加回来了**。要彻底剥掉需 `tools:node="remove"` + 真机验证（见 #31）。
 - 核对方式：`aapt dump permissions app-release-unsigned.apk` 读出 10 项系统权限 + 1 项应用私有权限。手写清单里那 7 项的用途（含两条被删掉的受限权限及删除理由）写在 `app/src/main/AndroidManifest.xml` 的注释里，合并清单的逐项对表见 `docs/KNOWN_ISSUES.md` 问题 31。
 - **无统计 / 广告 / 崩溃上报 SDK**，依赖全部来自 Google 与 Maven Central 官方坐标。
 - **数据只落在本地，且有保留期**：Room 库 `pickup_manager.db` 中入库满 **7 天**的记录（含待取）会被 WorkManager 每天兜底删除，也可在设置页手动提前清理；已删留档保留 30 天防止旧短信复活。外加 7 个 SharedPreferences 文件（`address_overrides` 地址覆盖表、`widget_data_cache` 小部件快照、`self_learning_prefs` 纠错历史、`permission_cache` 与 `permission_prefs` 权限缓存、`sms_permission_tracker` 短信权限状态、`pickup_manager_prefs` 通用偏好与导入标记）。系统设置里「清除数据」或卸载可彻底清除；**应用内设置页也提供带二次确认的「清空全部数据」**（见 #21），一次清掉三张表与上述 7 个偏好文件，并保留导入闸门以免短信被自动重新导入。
 - **短信原文会入库**（详情页展示与复制用）。导入时按 `content://sms` 全表游标读取，每条正文都会进内存一次，判定不是取件短信随即丢弃 —— "只读快递短信"这种说法做不到，本文不写。
-- 数据离开本应用有两条通道，均由用户主动触发：**剪贴板复制**，以及**分享到其它应用**（`Intent.ACTION_SEND`，把取件码 + 地址 + 快递公司交给用户选定的目标应用）。本应用没有网络权限，分享之后第三方如何使用不在本应用控制范围内。
+- 数据离开本应用有两条通道，均由用户主动触发：**剪贴板复制**，以及**分享到其它应用**（`Intent.ACTION_SEND`，把取件码 + 地址 + 快递公司交给用户选定的目标应用）。此外更新检查会向外发一个不含任何取件数据、只有固定 URL 的 GET 请求；分享之后第三方如何使用不在本应用控制范围内。
 - 存 `senderPhone`（发件号码）与 `phoneNumber`（正文中的快递员电话）；**不存**设备标识符（无 IMEI / Android ID / 广告标识）与位置信息。
 - debug 包不做日志剥离，**发布请只用 `assembleRelease`**。
 
@@ -159,14 +159,14 @@ Android 7.0+（`minSdk 24`）。release 包约 2.8 MB，无原生库、无后端
 |---|---|---|
 | `receiver/` | 2 | 短信广播入口、应用退出广播 |
 | `sms/` | 1 | `NotificationListenerService` 备用采集通道 |
-| `util/` | 24 | **解析引擎所在地**，另含权限、通知渠道、品牌检测 |
+| `util/` | 25 | **解析引擎所在地**，另含权限、通知渠道、品牌检测 |
 | `service/` | 1 | `AddressMatcher`：相似度匹配 + 地址标准化 |
 | `data/` | 11 | Room 数据库、DAO、实体、Repository、跨进程通知 |
-| `ui/` | 22 | Compose Activity、3 个屏幕、12 个组件与对话框、ViewModel、主题、动画 |
+| `ui/` | 23 | Compose Activity、3 个屏幕、12 个组件与对话框、ViewModel、主题、动画 |
 | `widget/` | 15 | 7 个 Provider + 基类 + 列表服务 + 前台刷新服务 + 品牌适配 + 快照 |
 | `worker/` | 1 | 过期检查与历史记录清理 |
 
-根包另有 `PickupApplication.kt`，主源 `.kt` 共 **78 个文件、22536 行**（文件数同样由 `tools/check_doc_refs.py` 核对）。
+根包另有 `PickupApplication.kt`，主源 `.kt` 共 **80 个文件、22811 行**（文件数同样由 `tools/check_doc_refs.py` 核对）。
 
 - **解析层**：主解析器按五级优先策略取码，**第 0 级是引导词**（短信里明写「取件码为 / 凭 / 输入」就直接取后面那串）；未命中时回落到使用多维加权评分与一票否决规则的 `PickupSmsParserV2`。**它不是模型，是纯规则。** 三条采集通道（广播 / 导入 / 通知）统一经 `util/PickupIngest.kt` 完成解析、取件码归一（`PickupCodeNormalizer`）与地址标签生成（`AddressTag`）。
 - **数据层**：Room `version = 10`，三张表（`PickupItem` / `SavedAddress` / `DeletedPickupItem`），`app/schemas/` 导出 8/9/10 供迁移校验。状态常量仍定义着"已过期"，但**现在只有 0 待取 / 1 已取会被写入**，过期改由展示层判断（见 #4）。
@@ -218,7 +218,7 @@ python3 tools/check_log_privacy.py      # 发布可见日志里不带用户数�
 
 另有 2 个环境变量门控的评测用例（未设置时自动跳过，不影响 CI 与他人构建），以及 9 条审计脚本（脱敏扫描、历史扫描、提交身份、图标 import、`.gitignore` 纵深、缺陷总表结构等），它们各自的回归测试共 **51** 个用例，即 `tools/audit/test_*.py` 共 **51** 个用例 —— 这个数字由 `tools/check_doc_refs.py` 复算。逐条命令见 `.github/workflows/android.yml`。
 
-**产物体积**：release **2.90 MB** / debug **19.79 MB**。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→78 个（28877 行 → 22536 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 2.83 MB / 2,963,052 字节，见 Releases）。
+**产物体积**：release **2.90 MB** / debug **19.79 MB**。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→80 个（28877 行 → 22811 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 2.83 MB / 2,963,052 字节，见 Releases）。
 
 ---
 
