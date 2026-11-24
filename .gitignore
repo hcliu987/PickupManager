@@ -79,6 +79,9 @@ manifest_dump.txt
 # 一次 `git add -A` 就能随 APK 一起公开。那恰好就是这套规则本来要堵的场景。
 # 修改本段后请用 README 第 9 节的 `git check-ignore` 回归表验一遍。
 *.json
+# 例外：仓库根的 version.json 是更新检查用的版本声明，非短信导出，需跟踪。
+# 仅放行根目录这一个精确路径，子目录的 *.json 仍被上面的规则挡住。
+!/version.json
 *.jsonl
 *.txt
 *.csv
