@@ -570,7 +570,7 @@ class ComposeMainActivity : ComponentActivity() {
     private fun openReleasePage() {
         // 直接指向 APK 文件：点一下即下载，无需在 Release 页里再找附件。
         // 本应用不声明 INTERNET 权限，链接交给浏览器，是否联网由用户决定。
-        val url = "https://gitee.com/884024720/pickup-manager/releases/download/v1.1/pickupmanager.apk"
+        val url = "https://gitee.com/884024720/pickup-manager/releases/download/latest/pickupmanager.apk"
         runCatching {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
