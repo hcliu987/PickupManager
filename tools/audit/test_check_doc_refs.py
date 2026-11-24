@@ -52,9 +52,9 @@ REAL_DETAIL = ROOT / 'docs' / 'KNOWN_ISSUES.md'
 # check_doc_refs.NUM_CLAIMS 的正则动态定位，数字怎么变都测的是同一件事。
 CASES = [
     ('行号漂移（±3，单行引用窗口已收窄到 ±2）',
-     '`ComposeMainActivity.kt:177` 也调了一次', '`ComposeMainActivity.kt:180` 也调了一次', '行号对不上', 'DETAIL'),
+     '`ComposeMainActivity.kt:181` 也调了一次', '`ComposeMainActivity.kt:184` 也调了一次', '行号对不上', 'DETAIL'),
     ('裸类名引用带扩展名形式的漂移',
-     '因为 `ComposeMainActivity.kt:177` 也调了一次',
+     '因为 `ComposeMainActivity.kt:181` 也调了一次',
      '因为 `ComposeMainActivity.kt:135` 也调了一次', '行号', 'DETAIL'),
     ('逗号分隔列表里的第二个行号',
      '`ui/components/RuleMatchingScreen.kt:624, 1137`',
@@ -67,7 +67,7 @@ CASES = [
     ('README 侧的行号引用（两份文档都要被覆盖）',
      '`ShareUtils.kt:18`（SmsForwarder', '`ShareUtils.kt:9999`（SmsForwarder', '行号', 'README'),
     ('计数类：包文件数',
-     '| `util/` | 24 |', '| `util/` | 21 |', '文件数不符', 'README'),
+     '| `util/` | 25 |', '| `util/` | 21 |', '文件数不符', 'README'),
 ]
 
 
