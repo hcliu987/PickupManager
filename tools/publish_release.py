@@ -3,8 +3,8 @@
 """
 码上取 PickupManager —— 同步代码并发布正式 Release（GitHub + Gitee）
 
-做一件事：把「git push 两个远端 → 为当前版本创建正式 Release → 上传签名 APK → 下载校验」串成一条命令。
-幂等：同一版本已存在 Release 时只补缺失的附件，不重复创建、不覆盖 latest 直链。
+做一件事：把「git push 三个远端（GitHub/Gitee/CodeUp）→ 同步版本 tag → 创建正式 Release → 上传签名 APK → 下载校验」串成一条命令。
+幂等：同一版本已存在 Release 时只补缺失的附件，不重复创建、不覆盖 latest 直链。CodeUp 是代码镜像，没有 Release API，只推代码与 tag。
 
 用法：
     python3 tools/publish_release.py                       # 按 version.json 版本发布
@@ -41,6 +41,10 @@ VERSION_JSON = ROOT / 'version.json'
 GH_OWNER, GH_REPO = 'hcliu987', 'PickupManager'
 GT_OWNER, GT_REPO = '884024720', 'pickup-manager'
 PROXY = os.environ.get('PICKUP_GITHUB_PROXY', 'http://127.0.0.1:7897')
+
+
+def has_remote(name):
+    return name in run(['git', 'remote'], capture=True).splitlines()
 
 
 def run(cmd, *, capture=False, check=True, env=None):
@@ -236,16 +240,24 @@ def main():
     print('=== 发布预览 ===')
     print(f'  版本：{tag}（versionCode {data["versionCode"]}）')
     print(f'  APK：{apk}（{apk.stat().st_size} 字节，SHA256 {digest}）')
-    print(f'  Push：{"跳过" if args.no_push else "GitHub + Gitee"}')
+    print(f'  Push：{"跳过" if args.no_push else "GitHub + Gitee + CodeUp"}')
 
     if not args.no_push and not args.dry_run:
-        print('\n=== 1. 同步代码 ===')
+        print('\n=== 1. 同步代码与标签 ===')
         dirty = run(['git', 'status', '--porcelain'], capture=True)
         if dirty:
             raise SystemExit('工作区不干净，请先提交：' + dirty[:400])
         run(['git', '-c', 'http.proxy=' + PROXY, '-c', 'https.proxy=' + PROXY,
              'push', 'origin', 'main'])
         run(['git', 'push', 'gitee', 'main'])
+        if has_remote('codeup'):
+            run(['git', 'push', 'codeup', 'main'])
+        # Release API 会在 GitHub 建轻量 tag；本地未必有，拉回后再推 CodeUp。
+        run(['git', '-c', 'http.version=HTTP/1.1', '-c', 'http.proxy=' + PROXY,
+             '-c', 'https.proxy=' + PROXY, 'fetch', 'origin',
+             f'refs/tags/{tag}:refs/tags/{tag}'], check=False)
+        if has_remote('codeup'):
+            run(['git', 'push', 'codeup', f'refs/tags/{tag}:refs/tags/{tag}'], check=False)
 
     print('\n=== 2. GitHub Release ===')
     gh_url = ensure_github(version, apk, body, token('github.com'), dry_run=args.dry_run)
