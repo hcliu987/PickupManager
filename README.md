@@ -245,7 +245,7 @@ python3 tools/check_log_privacy.py      # 发布可见日志里不带用户数�
 
 另有 2 个环境变量门控的评测用例（未设置时自动跳过，不影响 CI 与他人构建），以及 9 条审计脚本（脱敏扫描、历史扫描、提交身份、图标 import、`.gitignore` 纵深、缺陷总表结构等），它们各自的回归测试共 **51** 个用例，即 `tools/audit/test_*.py` 共 **51** 个用例 —— 这个数字由 `tools/check_doc_refs.py` 复算。逐条命令见 `.github/workflows/android.yml`。
 
-**产物体积**：release **1.86 MB** / debug **19.79 MB**（2026-11-25 移除 Material Components 依赖后）。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→80 个（28877 行 → 22812 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 1.86 MB / 1,903,407 字节；后续 Releases 仍指向上一版 2.90 MB 包，待下次发版更新）。
+**产物体积**：release **1.61 MB** / debug **19.79 MB**（2026-11-25 移除 Material Components 依赖、两张图标改 WebP 后）。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这轮清理合计从 2.83 MB 降到 1.61 MB：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→80 个（28877 行 → 22812 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML、移除仅为 XML 主题父样式引入的 Material Components、自适应图标前景与关于页图标改 WebP（当前 v1.3 release 签名包实测 1,682,225 字节，见 Releases）。
 
 ---
 
