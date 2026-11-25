@@ -88,9 +88,6 @@ ksp {
 dependencies {
     implementation(libs.androidx.core.ktx)
 
-    // 仅为 res/values/themes.xml 的 Theme.MaterialComponents 父主题所需
-    implementation(libs.material)
-
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)

@@ -245,7 +245,7 @@ python3 tools/check_log_privacy.py      # 发布可见日志里不带用户数�
 
 另有 2 个环境变量门控的评测用例（未设置时自动跳过，不影响 CI 与他人构建），以及 9 条审计脚本（脱敏扫描、历史扫描、提交身份、图标 import、`.gitignore` 纵深、缺陷总表结构等），它们各自的回归测试共 **51** 个用例，即 `tools/audit/test_*.py` 共 **51** 个用例 —— 这个数字由 `tools/check_doc_refs.py` 复算。逐条命令见 `.github/workflows/android.yml`。
 
-**产物体积**：release **2.90 MB** / debug **19.79 MB**。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→80 个（28877 行 → 22812 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 2.83 MB / 2,963,052 字节，见 Releases）。
+**产物体积**：release **1.86 MB** / debug **19.79 MB**（2026-11-25 移除 Material Components 依赖后）。清理前的基线是 4.68 MB / 25.86 MB（2026-07-29 的产物）。这 1.78 MB 是整轮清理的合计：移除 ONNX 层与 `onnxruntime` 依赖、主源 Kotlin 文件 106→80 个（28877 行 → 22812 行；其间单测从 16 增至 123 个用例）、删除无人引用的资源与备份规则 XML（当前 release 签名包实测 1.86 MB / 1,903,407 字节；后续 Releases 仍指向上一版 2.90 MB 包，待下次发版更新）。
 
 ---
 
@@ -270,7 +270,7 @@ python3 tools/check_log_privacy.py      # 发布可见日志里不带用户数�
 
 ## 8、第三方组件与许可
 
-**运行时依赖全部为 Apache-2.0**（AndroidX Core/Appcompat/Room/Lifecycle/Activity/WorkManager、Material Components 1.11.0、Jetpack Compose BOM 2024.02.00、Kotlin 标准库 2.0.21），与 GPLv3 单向兼容，不产生许可冲突。构建工具（AGP / Kotlin / KSP / Gradle）同为 Apache-2.0。
+**运行时依赖全部为 Apache-2.0**（AndroidX Core/Room/Lifecycle/Activity/WorkManager、Jetpack Compose BOM 2024.02.00、Kotlin 标准库 2.0.21），与 GPLv3 单向兼容，不产生许可冲突。构建工具（AGP / Kotlin / KSP / Gradle）同为 Apache-2.0。
 
 **唯一例外**：JUnit 4 为 **EPL-1.0**，仅在 `testImplementation` 下使用，不参与 APK 链接与分发。不要把它理解成"所有依赖都是 Apache/MIT"。
 
